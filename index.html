@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>引力 · Gravity —— 献给尹莉</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; }
+  body {
+    background:#04060f; color:#e8ecf6;
+    font-family:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+    touch-action:manipulation; user-select:none; -webkit-user-select:none;
+    -webkit-touch-callout:none;
+  }
+
+  /* ── 层级：星空(0) < 星云(1) < 页面(2) < 烟花(3) < 音乐钮(4) ── */
+  #sky { position:fixed; inset:0; z-index:0; }
+  .nebula { position:fixed; inset:0; z-index:1; pointer-events:none; }
+  .nebula::before, .nebula::after {
+    content:""; position:absolute; border-radius:50%; filter:blur(60px); opacity:.5;
+  }
+  .nebula::before { width:70vw; height:70vw; left:-20vw; top:-18vw;
+    background:radial-gradient(circle, rgba(64,84,180,.35), transparent 65%); }
+  .nebula::after  { width:80vw; height:80vw; right:-25vw; bottom:-22vw;
+    background:radial-gradient(circle, rgba(150,84,140,.28), transparent 65%); }
+
+  #stage {
+    position:relative; z-index:2; height:100%; height:100dvh;
+    max-width:520px; margin:0 auto; overflow:hidden;
+  }
+  @media (min-width:560px){ #stage { box-shadow:0 0 80px rgba(30,50,120,.35); } }
+
+  .page {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; text-align:center;
+    padding:40px 30px 96px; opacity:0; pointer-events:none;
+    transition:opacity .8s ease;
+  }
+  .page.active { opacity:1; pointer-events:auto; }
+
+  .tag { font-size:12px; letter-spacing:.45em; color:#c9a84c; text-indent:.45em; margin-bottom:26px; }
+  h1.title {
+    font-size:clamp(56px,20vw,88px); font-weight:600; line-height:1.1; letter-spacing:.08em;
+    background:linear-gradient(180deg,#fdf3d0 10%,#e7c76a 55%,#b98d2e 95%);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    text-shadow:0 0 42px rgba(231,199,106,.25);
+  }
+  .en-sub { font-size:14px; letter-spacing:.6em; color:#9aa8c8; text-indent:.6em; margin:14px 0 34px; }
+  .poem p { font-size:17px; line-height:2.15; color:#dfe5f2; letter-spacing:.06em; }
+  .poem .em { color:#f2d98c; }
+  .poem .dim { color:#9fb0d0; font-size:15px; }
+  .sign { margin-top:26px; font-size:14px; color:#8fa0c0; letter-spacing:.2em; }
+
+  .ln { opacity:0; transform:translateY(16px); }
+  .page.active .ln { animation:rise .95s cubic-bezier(.2,.7,.3,1) forwards;
+    animation-delay:calc(var(--i) * .5s + .15s); }
+  @keyframes rise { to { opacity:1; transform:translateY(0); } }
+
+  .hint { position:absolute; bottom:5.5%; left:0; right:0; font-size:13px; letter-spacing:.3em;
+    color:#7e90b6; opacity:0; pointer-events:none; }
+  .page.active .hint.on { animation:breathe 2.4s ease-in-out infinite; }
+  @keyframes breathe { 0%,100%{opacity:.25} 50%{opacity:.95} }
+
+  .cover-cta {
+    margin-top:44px; padding:15px 42px; border-radius:999px; font-size:16px; letter-spacing:.2em;
+    color:#f4e3ac; background:rgba(231,199,106,.06); border:1px solid rgba(231,199,106,.45);
+    box-shadow:0 0 30px rgba(231,199,106,.12), inset 0 0 18px rgba(231,199,106,.06);
+    animation:cta 2.6s ease-in-out infinite; cursor:pointer;
+  }
+  @keyframes cta { 0%,100%{ box-shadow:0 0 22px rgba(231,199,106,.10), inset 0 0 14px rgba(231,199,106,.05);}
+                   50%{ box-shadow:0 0 44px rgba(231,199,106,.30), inset 0 0 24px rgba(231,199,106,.12);} }
+  .cover-note { margin-top:18px; font-size:12px; color:#6d7fa3; letter-spacing:.15em; }
+
+  .days-num {
+    font-size:clamp(72px,24vw,110px); font-weight:600; line-height:1.2; margin:10px 0 4px;
+    background:linear-gradient(180deg,#fdf3d0,#e7c76a 60%,#b98d2e);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .days-unit { font-size:15px; color:#9fb0d0; letter-spacing:.4em; text-indent:.4em; margin-bottom:30px; }
+  .mem-list { width:100%; max-width:340px; margin-top:6px; text-align:left; }
+  .mem { display:flex; align-items:flex-start; gap:12px; padding:10px 4px; font-size:15px;
+    line-height:1.8; color:#d5dcef; border-bottom:1px dashed rgba(160,175,210,.18); }
+  .mem:last-child { border-bottom:none; }
+  .mem .ic { flex:none; filter:drop-shadow(0 0 8px rgba(231,199,106,.35)); }
+
+  #ring { width:min(64vw,260px); height:auto; display:block; margin-bottom:6px; }
+  .propose-q { font-size:clamp(30px,9vw,42px); letter-spacing:.14em; color:#fdf3d0; margin:14px 0 34px;
+    text-shadow:0 0 30px rgba(231,199,106,.35); }
+  .btn-row { display:flex; gap:18px; align-items:center; justify-content:center; min-height:54px; width:100%; }
+  .btn-yes {
+    padding:14px 40px; border-radius:999px; font-size:17px; letter-spacing:.14em; font-weight:700;
+    color:#2a1c05; background:linear-gradient(135deg,#f6e2a0,#c9992f); border:none; cursor:pointer;
+    box-shadow:0 0 26px rgba(231,199,106,.4);
+  }
+
+  .yes-date { font-size:clamp(19px,5.4vw,23px); color:#fdf3d0; letter-spacing:.1em; line-height:1.9; }
+  .galaxy-sign { display:flex; align-items:center; gap:10px; margin-top:30px; font-size:16px;
+    letter-spacing:.2em; color:#e7c76a; }
+  .replay { margin-top:40px; padding:11px 30px; border-radius:999px; font-size:14px; letter-spacing:.2em;
+    color:#9fb0d0; background:transparent; border:1px solid rgba(159,176,208,.4); cursor:pointer; }
+
+  .disc { position:fixed; z-index:4; top:calc(env(safe-area-inset-top) + 14px); right:14px;
+    width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:18px; color:#e7c76a; background:rgba(20,28,58,.55); border:1px solid rgba(231,199,106,.4);
+    backdrop-filter:blur(6px); opacity:0; pointer-events:none; transition:opacity .6s; cursor:pointer; }
+  .disc.show { opacity:1; pointer-events:auto; animation:spin 7s linear infinite; }
+  .disc.paused { animation-play-state:paused; opacity:.55; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  #fx { position:fixed; inset:0; z-index:1; pointer-events:none; }
+
+  .svg-illu { width:min(72vw,300px); height:auto; margin:8px auto 22px; display:block; }
+  .svg-illu.small { width:min(60vw,250px); }
+</style>
+</head>
+<body>
+
+<canvas id="sky"></canvas>
+<div class="nebula"></div>
+
+<div id="stage">
+
+  <!-- P1 封面 -->
+  <section class="page" data-p="0">
+    <div class="tag">TO GRAVITY</div>
+    <h1 class="title ln" style="--i:0">引力</h1>
+    <div class="en-sub ln" style="--i:1">G R A V I T Y</div>
+    <p class="poem">
+      <span class="ln dim" style="--i:2">献给 <span class="em" data-cfg="herName"></span> ——</span><br>
+      <span class="ln" style="--i:3">有一段信号，穿越了 138 亿年，</span>
+      <span class="ln" style="--i:4">只为抵达你。</span></p>
+    <div class="cover-cta no-adv ln" id="startBtn" style="--i:5">轻触，接收宇宙的信号 ✦</div>
+    <div class="cover-note ln" style="--i:6">（打开声音，效果最佳 ♪）</div>
+  </section>
+
+  <!-- P2 序章 · 星尘 -->
+  <section class="page" data-p="1">
+    <div class="tag">序章 · 星尘</div>
+    <p class="poem">
+      <span class="ln dim" style="--i:0">宇宙诞生于 138 亿年前的一次爆炸。</span><br>
+      <span class="ln" style="--i:1">无数星尘在黑暗里流浪了亿万年，</span><br>
+      <span class="ln" style="--i:2">只为了在某一个瞬间，</span><br>
+      <span class="ln em" style="--i:3">碰撞出一点点引力。</span>
+    </p>
+    <div class="hint">轻触，继续 ✦</div>
+  </section>
+
+  <!-- P3 第一章 · 引力 · 相遇 -->
+  <section class="page" data-p="2">
+    <div class="tag">第一章 · 引力</div>
+    <svg class="svg-illu small ln" style="--i:0" viewBox="0 0 260 130" fill="none">
+      <circle cx="52" cy="78" r="5" fill="#f6e2a0" opacity=".95"/>
+      <circle cx="52" cy="78" r="11" fill="#f6e2a0" opacity=".22"/>
+      <circle cx="208" cy="52" r="4" fill="#f0b6c8" opacity=".95"/>
+      <circle cx="208" cy="52" r="9" fill="#f0b6c8" opacity=".22"/>
+      <path d="M60 76 Q130 40 200 54" stroke="rgba(231,199,106,.5)" stroke-width="1.2" stroke-dasharray="2 6"/>
+      <path d="M60 80 Q130 52 200 56" stroke="rgba(240,182,200,.4)" stroke-width="1" stroke-dasharray="2 7"/>
+    </svg>
+    <p class="poem">
+      <span class="ln" style="--i:1">牛顿说，任何两个物体之间都有引力。</span><br>
+      <span class="ln" style="--i:2">但他没说的是：</span>
+      <span class="ln em" style="--i:3">有些引力，要用一整个宇宙去等。</span><br>
+      <span class="ln dim" style="--i:4">—— 2022 年的<span data-cfg="meetSeason"></span>，<span data-cfg="meetText"></span>，<br>我就明白了。</span>
+    </p>
+    <div class="hint">轻触，继续 ✦</div>
+  </section>
+
+  <!-- P4 第二章 · 轨道 · 在一起 -->
+  <section class="page" data-p="3">
+    <div class="tag">第二章 · 轨道</div>
+    <svg class="svg-illu ln" style="--i:0" viewBox="0 0 280 200" fill="none">
+      <ellipse cx="140" cy="100" rx="108" ry="54" stroke="rgba(159,176,208,.35)" stroke-width="1" stroke-dasharray="3 7"/>
+      <path d="M140 92 c-2.6-3.4 -8.4-3 -8.4 1.6 c0 3.6 5 7.6 8.4 10.4 c3.4-2.8 8.4-6.8 8.4-10.4 c0-4.6 -5.8-5 -8.4-1.6 Z"
+            fill="#f6e2a0" opacity=".9">
+        <animate attributeName="opacity" values=".6;1;.6" dur="2.4s" repeatCount="indefinite"/>
+      </path>
+      <g>
+        <circle r="11" fill="#f6e2a0" opacity=".18"/><circle r="4.5" fill="#f6e2a0"/>
+        <animateMotion dur="7s" repeatCount="indefinite" path="M 248 100 A 108 54 0 1 1 32 100 A 108 54 0 1 1 248 100"/>
+      </g>
+      <g>
+        <circle r="9" fill="#f0b6c8" opacity=".18"/><circle r="3.5" fill="#f0b6c8"/>
+        <animateMotion dur="7s" begin="-3.5s" repeatCount="indefinite" path="M 248 100 A 108 54 0 1 1 32 100 A 108 54 0 1 1 248 100"/>
+      </g>
+    </svg>
+    <p class="poem">
+      <span class="ln em" style="--i:1">2022 年 9 月 18 日，你走进我的世界。</span><br>
+      <span class="ln" style="--i:2">从那天起，我不再是流浪的星尘——</span><br>
+      <span class="ln" style="--i:3">我有了自己的轨道，</span>
+      <span class="ln em" style="--i:4">而轨道的中心，是你。</span>
+    </p>
+    <div class="hint">轻触，继续 ✦</div>
+  </section>
+
+  <!-- P5 第三章 · 环游 · 相伴 -->
+  <section class="page" data-p="4">
+    <div class="tag">第三章 · 环游</div>
+    <p class="poem ln" style="--i:0"><span class="dim">被你的引力捕获，已经是</span></p>
+    <div class="days-num ln" style="--i:1" id="daysNum">0</div>
+    <div class="days-unit ln" style="--i:2">天</div>
+    <p class="poem ln" style="--i:3; margin-bottom:8px"><span class="dim">这 N 天里——</span></p>
+    <div class="mem-list" id="memList"></div>
+    <div class="hint">轻触，继续 ✦</div>
+  </section>
+
+  <!-- P6 第四章 · 时空 · 承诺 -->
+  <section class="page" data-p="5">
+    <div class="tag">第四章 · 时空</div>
+    <svg class="svg-illu small ln" style="--i:0" viewBox="0 0 260 170" fill="none">
+      <g>
+        <ellipse cx="130" cy="85" rx="108" ry="52" stroke="rgba(159,176,208,.28)" stroke-width="1" stroke-dasharray="2 6"/>
+        <animateTransform attributeName="transform" type="rotate" from="0 130 85" to="360 130 85" dur="26s" repeatCount="indefinite"/>
+      </g>
+      <g>
+        <ellipse cx="130" cy="85" rx="76" ry="36" stroke="rgba(231,199,106,.30)" stroke-width="1" stroke-dasharray="2 6"/>
+        <animateTransform attributeName="transform" type="rotate" from="0 130 85" to="-360 130 85" dur="18s" repeatCount="indefinite"/>
+      </g>
+      <circle r="3" fill="#f0b6c8">
+        <animateMotion dur="9s" repeatCount="indefinite" path="M 238 85 A 108 52 0 1 1 22 85 A 108 52 0 1 1 238 85"/>
+      </circle>
+      <circle r="2.5" fill="#f6e2a0">
+        <animateMotion dur="6s" repeatCount="indefinite" path="M 206 85 A 76 36 0 1 0 54 85 A 76 36 0 1 0 206 85"/>
+      </circle>
+      <path d="M130 118 c-9-11 -28-10.5 -28 5.5 c0 12 17 25 28 34.5 c11-9.5 28-22.5 28-34.5 c0-16 -19-16.5 -28-5.5 Z"
+            fill="url(#hg)" opacity=".92">
+        <animate attributeName="opacity" values=".75;1;.75" dur="2.2s" repeatCount="indefinite"/>
+      </path>
+      <defs>
+        <radialGradient id="hg" cx="50%" cy="35%" r="75%">
+          <stop offset="0%" stop-color="#ffe9b0"/><stop offset="55%" stop-color="#e88ba6"/><stop offset="100%" stop-color="#b05575"/>
+        </radialGradient>
+      </defs>
+    </svg>
+    <p class="poem">
+      <span class="ln" style="--i:1">爱因斯坦说，引力是质量弯曲了时空。我信。</span><br>
+      <span class="ln" style="--i:2">因为自从有了你，</span>
+      <span class="ln" style="--i:3">我的心跳，每一次都朝着你的方向弯曲。</span><br>
+      <span class="ln dim" style="--i:4">物理学家穷尽一生研究万有引力，</span>
+      <span class="ln em" style="--i:5">而我很幸运——一生只需要研究一条：心引力。</span><br>
+      <span class="ln" style="--i:6"><span class="em" data-cfg="herName"></span>，我想用余生来验证这条定律：</span>
+      <span class="ln em" style="--i:7">我对你，永远做向心运动。</span>
+    </p>
+    <div class="hint">轻触，继续 ✦</div>
+  </section>
+
+  <!-- P7 求婚页 -->
+  <section class="page" data-p="6">
+    <svg id="ring" viewBox="0 0 240 250" fill="none"></svg>
+    <div class="propose-q ln" style="--i:1">嫁给我，好吗？</div>
+    <div class="btn-row no-adv">
+      <button class="btn-yes ln" style="--i:2" id="yesBtn">我愿意 ♥</button>
+    </div>
+  </section>
+
+  <!-- P8 终章 -->
+  <section class="page" data-p="7">
+    <div class="tag">她说愿意</div>
+    <p class="poem">
+      <span class="ln yes-date" style="--i:0"><span id="yesDate"></span>，<br>你说：我愿意。</span>
+    </p>
+    <p class="poem" style="margin-top:26px">
+      <span class="ln" style="--i:2">从今天起，我们的引力，</span>
+      <span class="ln em" style="--i:3">足够弯曲整个时空。</span><br>
+      <span class="ln dim" style="--i:4">这首歌叫《心引力》——现在，它有了答案。</span>
+    </p>
+    <div class="galaxy-sign ln" style="--i:5">
+      <svg width="46" height="26" viewBox="0 0 46 26" fill="none">
+        <path d="M23 15 c-3-4 -9.5-3.8 -9.5 2 c0 4.2 6 8.8 9.5 11.6 c3.5-2.8 9.5-7.4 9.5-11.6 c0-5.8 -6.5-6 -9.5-2 Z" transform="scale(.72) translate(8,-4)" fill="#f0b6c8"/>
+        <circle r="2.2" fill="#f6e2a0"><animateMotion dur="4s" repeatCount="indefinite" path="M 41 13 A 18 9 0 1 1 5 13 A 18 9 0 1 1 41 13"/></circle>
+        <circle r="1.6" fill="#cfe0ff"><animateMotion dur="4s" begin="-2s" repeatCount="indefinite" path="M 41 13 A 18 9 0 1 1 5 13 A 18 9 0 1 1 41 13"/></circle>
+      </svg>
+      <span data-cfg="herName"></span>&nbsp;♥&nbsp;<span data-cfg="myName"></span>
+    </div>
+    <p class="ln dim" style="--i:6; margin-top:20px; font-size:14px; color:#8fa0c0;">—— <span data-cfg="myName"></span>，永远绕着你转的人</p>
+    <button class="replay no-adv ln" style="--i:7" id="replayBtn">↺ 从头再读一遍</button>
+  </section>
+
+</div>
+
+<canvas id="fx"></canvas>
+<div class="disc" id="disc">♪</div>
+<audio id="bgm" src="music.m4a" loop preload="auto"></audio>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   ♥ 可改配置区 —— 改这里就行，其他代码不用动
+   ════════════════════════════════════════════════════════════ */
+const CONFIG = {
+  herName: "尹莉",                 // 她的称呼
+  herEnglishName: "Gravity",       // 她的英文名
+  myName: "旋仔",                  // 你的署名
+  anniversary: "2022-09-18",       // 在一起的日子（用于「第 N 天」）
+
+  meetSeason: "秋天",              // P3 相遇的季节
+  meetText: "你笑着从我身边走过",    // 【可改】P3 第一次见你的场景，一句话
+
+  // 【可改】P5 三个小回忆（icon 可换成任意 emoji）
+  memories: [
+    { icon: "🍲", text: "那家火锅店，你总说微辣就好" },
+    { icon: "🌊", text: "青岛的海，你说想再看一次" },
+    { icon: "☔️", text: "下雨天，你把伞悄悄歪向我这边" },
+  ],
+};
+/* ══════════════════════════ 配置区结束 ══════════════════════════ */
+
+/* ---------- 配置注入 ---------- */
+document.querySelectorAll("[data-cfg]").forEach(el => {
+  el.textContent = CONFIG[el.dataset.cfg] ?? "";
+});
+document.title = `引力 · ${CONFIG.herEnglishName} —— 献给${CONFIG.herName}`;
+const memList = document.getElementById("memList");
+CONFIG.memories.forEach((m, i) => {
+  const div = document.createElement("div");
+  div.className = "mem ln";
+  div.style.setProperty("--i", 4 + i);
+  div.innerHTML = `<span class="ic">${m.icon}</span><span>${m.text}</span>`;
+  memList.appendChild(div);
+});
+
+/* ---------- 上海时区工具 ---------- */
+const TZ = "Asia/Shanghai";
+function shanghaiYMD(d = new Date()) {
+  const s = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+  const [y, m, dd] = s.split("-").map(Number);
+  return { y, m, d: dd };
+}
+function daysTogether() {
+  const [ay, am, ad] = CONFIG.anniversary.split("-").map(Number);
+  const { y, m, d } = shanghaiYMD();
+  return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ay, am - 1, ad)) / 86400000) + 1;
+}
+function yesDateText() {
+  const { y, m, d } = shanghaiYMD();
+  return `${y} 年 ${m} 月 ${d} 日`;
+}
+
+/* ---------- 页面切换 ---------- */
+const pages = [...document.querySelectorAll(".page")];
+let cur = 0, started = false;
+const bgm = document.getElementById("bgm");
+const disc = document.getElementById("disc");
+
+function activate(i) {
+  pages.forEach((p, k) => p.classList.toggle("active", k === i));
+  cur = i;
+  const hint = pages[i].querySelector(".hint");
+  if (hint) hint.classList.add("on");
+  if (i === 4) runDaysCount();
+  if (i === 6) startRing();
+  if (i === 7) { document.getElementById("yesDate").textContent = yesDateText(); fxStart(); }
+  else fxStop();
+}
+function goNext() {
+  if (cur >= pages.length - 1) return;
+  activate(cur + 1);
+}
+document.getElementById("stage").addEventListener("click", e => {
+  if (e.target.closest(".no-adv")) return;
+  if (cur === 0 && !started) return;  // 封面必须点按钮（同时起音乐）
+  if (cur === 6) return;              // 求婚页必须按按钮
+  goNext();
+});
+
+/* 封面：起音乐 + 进入 */
+document.getElementById("startBtn").addEventListener("click", () => {
+  if (started) return;
+  started = true;
+  bgm.play().catch(() => {});
+  disc.classList.add("show");
+  goNext();
+});
+disc.addEventListener("click", () => {
+  if (bgm.paused) { bgm.play().catch(() => {}); disc.classList.remove("paused"); }
+  else { bgm.pause(); disc.classList.add("paused"); }
+});
+
+/* ---------- 第 N 天（数字滚动） ---------- */
+let daysDone = false;
+function runDaysCount() {
+  const el = document.getElementById("daysNum");
+  const target = daysTogether();
+  if (daysDone) { el.textContent = target; return; }
+  daysDone = true;
+  const t0 = performance.now(), dur = 2200;
+  (function tick(t) {
+    const p = Math.min((t - t0) / dur, 1), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(target * e);
+    if (p < 1) requestAnimationFrame(tick);
+  })(t0);
+}
+
+/* ---------- 求婚页：星光汇聚成戒指 ---------- */
+const ringSvg = document.getElementById("ring");
+let ringDone = false;
+function startRing() {
+  if (ringDone) return;
+  ringDone = true;
+  const NS = "http://www.w3.org/2000/svg";
+  const cx = 120, cy = 150, rx = 58, ry = 66;
+  const pts = [];
+  for (let k = 0; k < 22; k++) {
+    const a = (k / 22) * Math.PI * 2;
+    pts.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]);
+  }
+  const parts = pts.map(p => {
+    const c = document.createElementNS(NS, "circle");
+    c.setAttribute("r", (1.8 + Math.random() * 1.4).toFixed(1));
+    c.setAttribute("fill", Math.random() < .8 ? "#f6e2a0" : "#ffffff");
+    ringSvg.appendChild(c);
+    return { c,
+      sx: 20 + Math.random() * 200, sy: 20 + Math.random() * 210,
+      tx: p[0], ty: p[1] };
+  });
+  const glow = document.createElementNS(NS, "g");
+  glow.innerHTML =
+    `<defs>
+       <filter id="rg"><feGaussianBlur stdDeviation="2.4" result="b"/>
+         <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+       <linearGradient id="band" x1="0" y1="0" x2="1" y2="1">
+         <stop offset="0%" stop-color="#fdf3d0"/><stop offset="100%" stop-color="#b98d2e"/></linearGradient>
+       <linearGradient id="dia" x1="0" y1="0" x2="0" y2="1">
+         <stop offset="0%" stop-color="#eaf6ff"/><stop offset="100%" stop-color="#9fc6e8"/></linearGradient>
+     </defs>
+     <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" stroke="url(#band)" stroke-width="6.5" filter="url(#rg)"/>
+     <ellipse cx="${cx}" cy="${cy}" rx="${rx - 5}" ry="${ry - 6}" stroke="rgba(255,244,214,.75)" stroke-width="1.4"/>
+     <g filter="url(#rg)">
+       <polygon points="120,32 139,58 120,84 101,58" fill="url(#dia)" stroke="rgba(255,255,255,.85)" stroke-width="1"/>
+       <polygon points="120,32 139,58 120,58" fill="rgba(255,255,255,.28)"/>
+       <line x1="101" y1="58" x2="139" y2="58" stroke="rgba(255,255,255,.7)" stroke-width="1"/>
+       <line x1="120" y1="32" x2="120" y2="84" stroke="rgba(255,255,255,.45)" stroke-width="1"/>
+     </g>`;
+  glow.style.opacity = 0;
+  glow.style.transition = "opacity 1.2s ease";
+  ringSvg.appendChild(glow);
+
+  const t0 = performance.now(), dur = 2100;
+  (function tick(t) {
+    const p = Math.min((t - t0) / dur, 1), e = 1 - Math.pow(1 - p, 3);
+    parts.forEach(o => {
+      o.c.setAttribute("cx", (o.sx + (o.tx - o.sx) * e).toFixed(1));
+      o.c.setAttribute("cy", (o.sy + (o.ty - o.sy) * e).toFixed(1));
+      o.c.setAttribute("opacity", (1 - p * .85).toFixed(2));
+    });
+    if (p < 1) requestAnimationFrame(tick);
+    else glow.style.opacity = 1;
+  })(t0);
+}
+
+/* ---------- 我愿意 ---------- */
+function accept() {
+  document.getElementById("yesDate").textContent = yesDateText();
+  fxBurst(innerWidth / 2, innerHeight * .38, true);
+  setTimeout(() => activate(7), 900);
+}
+document.getElementById("yesBtn").addEventListener("click", e => { e.stopPropagation(); accept(); });
+document.getElementById("replayBtn").addEventListener("click", e => {
+  e.stopPropagation();
+  activate(0);
+});
+
+/* ---------- 星空背景 ---------- */
+const sky = document.getElementById("sky"), sctx = sky.getContext("2d");
+let stars = [], meteors = [], DPR = Math.min(devicePixelRatio || 1, 2);
+function sizeCanvas(c) {
+  c.width = innerWidth * DPR; c.height = innerHeight * DPR;
+  c.style.width = innerWidth + "px"; c.style.height = innerHeight + "px";
+}
+function initSky() {
+  sizeCanvas(sky);
+  stars = Array.from({ length: 140 }, () => ({
+    x: Math.random() * sky.width, y: Math.random() * sky.height,
+    r: (Math.random() * 1.1 + .3) * DPR,
+    base: Math.random() * .5 + .25, ph: Math.random() * Math.PI * 2,
+    sp: Math.random() * .9 + .3,
+  }));
+}
+let lastMeteor = 0;
+function drawSky(t) {
+  sctx.clearRect(0, 0, sky.width, sky.height);
+  for (const s of stars) {
+    const a = s.base + Math.sin(t / 1000 * s.sp + s.ph) * .3;
+    sctx.globalAlpha = Math.max(.05, a);
+    sctx.fillStyle = "#dfe8ff";
+    sctx.beginPath(); sctx.arc(s.x, s.y, s.r, 0, 7); sctx.fill();
+  }
+  sctx.globalAlpha = 1;
+  if (t - lastMeteor > 5000 + Math.random() * 4000) {
+    lastMeteor = t;
+    meteors.push({ x: Math.random() * sky.width * .8 + sky.width * .1, y: -20,
+      vx: (Math.random() * 2 + 2.5) * DPR, vy: (Math.random() * 1.4 + 1.6) * DPR, life: 1 });
+  }
+  meteors = meteors.filter(m => m.life > 0);
+  for (const m of meteors) {
+    m.x += m.vx * 6; m.y += m.vy * 6; m.life -= .016;
+    const g = sctx.createLinearGradient(m.x, m.y, m.x - m.vx * 26, m.y - m.vy * 26);
+    g.addColorStop(0, `rgba(255,244,214,${Math.max(m.life, 0)})`);
+    g.addColorStop(1, "rgba(255,244,214,0)");
+    sctx.strokeStyle = g; sctx.lineWidth = 1.6 * DPR;
+    sctx.beginPath(); sctx.moveTo(m.x, m.y);
+    sctx.lineTo(m.x - m.vx * 26, m.y - m.vy * 26); sctx.stroke();
+  }
+}
+
+/* ---------- 烟花 ---------- */
+const fxc = document.getElementById("fx"), fctx = fxc.getContext("2d");
+sizeCanvas(fxc);
+const COLORS = ["#f6e2a0", "#f0b6c8", "#cfe0ff", "#ffffff", "#e7c76a"];
+let fparts = [], fxRunning = false, fxTimer = null;
+function fxBurst(x, y, big = false) {
+  if (fparts.length > 2200) return;  // 粒子上限：防止后台节流时无限堆积
+  const n = big ? 130 : 80 + Math.random() * 40;
+  const col = COLORS[(Math.random() * COLORS.length) | 0];
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, v = (Math.random() * 3.2 + 1.2) * DPR * (big ? 1.3 : 1);
+    fparts.push({ x: x * DPR, y: y * DPR, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+      life: 1, decay: Math.random() * .012 + .008,
+      col: Math.random() < .7 ? col : COLORS[(Math.random() * COLORS.length) | 0] });
+  }
+  ensureFxLoop();
+}
+function fxLoop() {
+  fctx.clearRect(0, 0, fxc.width, fxc.height);
+  fparts = fparts.filter(p => p.life > 0);
+  for (const p of fparts) {
+    p.x += p.vx; p.y += p.vy; p.vy += .028 * DPR; p.vx *= .985; p.vy *= .985;
+    p.life -= p.decay;
+    fctx.globalAlpha = Math.max(p.life, 0);
+    fctx.fillStyle = p.col;
+    fctx.beginPath(); fctx.arc(p.x, p.y, 1.7 * DPR * p.life + .4, 0, 7); fctx.fill();
+  }
+  fctx.globalAlpha = 1;
+  if (fparts.length > 0) requestAnimationFrame(fxLoop);
+  else fxRunning = false;
+}
+function ensureFxLoop() {
+  if (!fxRunning) { fxRunning = true; requestAnimationFrame(fxLoop); }
+}
+function fxStart() {
+  fxBurst(innerWidth / 2, innerHeight * .32, true);
+  clearInterval(fxTimer);
+  fxTimer = setInterval(() => {
+    fxBurst(innerWidth * (0.12 + Math.random() * 0.76), innerHeight * (0.12 + Math.random() * 0.4));
+  }, 1100);
+}
+function fxStop() { clearInterval(fxTimer); }
+
+/* ---------- 主循环 / 事件 ---------- */
+function loop(t) { drawSky(t); requestAnimationFrame(loop); }
+initSky(); requestAnimationFrame(loop);
+activate(0);
+
+addEventListener("resize", () => {
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  initSky(); sizeCanvas(fxc);
+});
+document.addEventListener("gesturestart", e => e.preventDefault());
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("dblclick", e => e.preventDefault());
+</script>
+</body>
+</html>
