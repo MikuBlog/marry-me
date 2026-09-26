@@ -40,7 +40,7 @@
     padding:40px 30px 96px; opacity:0; pointer-events:none;
     transition:opacity .8s ease;
   }
-  .page.active { opacity:1; pointer-events:auto; }
+  .page.active { opacity:1; pointer-events:auto; cursor:pointer; }
 
   .tag { font-size:12px; letter-spacing:.45em; color:#c9a84c; text-indent:.45em; margin-bottom:26px; }
   h1.title {
@@ -367,18 +367,30 @@ function goNext() {
 }
 document.getElementById("stage").addEventListener("click", e => {
   if (e.target.closest(".no-adv")) return;
-  if (cur === 0 && !started) return;  // 封面必须点按钮（同时起音乐）
-  if (cur === 6) return;              // 求婚页必须按按钮
+  if (cur === 0 && !started) { startExperience(); return; }
+  if (cur === 6) return;
   goNext();
 });
+/* 手机/iOS/微信内核：对非交互 div 的 click 合成不可靠，用 touchend 兜底 */
+document.getElementById("stage").addEventListener("touchend", e => {
+  if (e.target.closest(".no-adv")) return;   // 按钮等交互元素走自身 click
+  if (cur === 6 || cur >= pages.length - 1) return; // 求婚页必须按按钮；终章无推进
+  e.preventDefault();                        // 阻止合成 click，避免双翻页
+  if (cur === 0 && !started) { startExperience(); return; }
+  goNext();
+}, { passive: false });
 
-/* 封面：起音乐 + 进入 */
-document.getElementById("startBtn").addEventListener("click", () => {
+/* 封面：起音乐 + 进入（点按钮或任意位置均可） */
+function startExperience() {
   if (started) return;
   started = true;
   bgm.play().catch(() => {});
   disc.classList.add("show");
   goNext();
+}
+document.getElementById("startBtn").addEventListener("click", e => {
+  e.stopPropagation();
+  startExperience();
 });
 disc.addEventListener("click", () => {
   if (bgm.paused) { bgm.play().catch(() => {}); disc.classList.remove("paused"); }

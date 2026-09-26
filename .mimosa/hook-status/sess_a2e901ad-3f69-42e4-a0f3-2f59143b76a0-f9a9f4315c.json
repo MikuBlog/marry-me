@@ -1,14 +1,14 @@
 {
   "schemaVersion": "mimosa-hook-status/v1",
-  "recordedAt": "2026-09-26T13:40:27.633Z",
+  "recordedAt": "2026-09-26T13:55:22.678Z",
   "sessionId": "sess_a2e901ad-3f69-42e4-a0f3-2f59143b76a0",
   "event": "PostToolUse",
   "toolName": "Edit",
-  "file": "/Users/xuanzai/.zcode/cli/memories/projects/marry-me-fdc7cf01467c1144/memory/marry-me-proposal-h5.md",
+  "file": "/Users/xuanzai/Desktop/all-project/marry-me/index.html",
   "outcome": "clear",
   "coverage": "complete",
   "findingCount": 0,
-  "durationMs": 3,
+  "durationMs": 2,
   "hostState": "hook_complete",
   "reportHint": ".mimosa/reports/"
 }
