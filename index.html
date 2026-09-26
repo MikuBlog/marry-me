@@ -351,6 +351,25 @@ let cur = 0, started = false;
 const bgm = document.getElementById("bgm");
 const disc = document.getElementById("disc");
 
+/* 微信内打开即自动播放：iOS/微信禁止网页未经点击出声（平台策略），
+   唯一官方通道是 WeixinJSBridgeReady；普通浏览器会静默失败，
+   回退为首次点击封面任意处起音乐 */
+function tryAutoplay() {
+  bgm.play().then(() => { started = true; disc.classList.add("show"); }).catch(() => {});
+}
+function wechatBridge() {
+  if (typeof WeixinJSBridge !== "undefined" && WeixinJSBridge.invoke) {
+    WeixinJSBridge.invoke("getNetworkType", {}, () => tryAutoplay());
+    return true;
+  }
+  return false;
+}
+if (wechatBridge()) { /* bridge 已就绪，已触发自动播放 */ }
+else {
+  document.addEventListener("WeixinJSBridgeReady", () => wechatBridge(), false);
+  tryAutoplay(); // 极少数宽松环境直接自动播；失败则静默等待首次点击
+}
+
 function activate(i) {
   pages.forEach((p, k) => p.classList.toggle("active", k === i));
   cur = i;
