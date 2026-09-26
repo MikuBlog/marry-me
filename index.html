@@ -384,37 +384,47 @@ function goNext() {
   if (cur >= pages.length - 1) return;
   activate(cur + 1);
 }
-document.getElementById("stage").addEventListener("click", e => {
-  if (e.target.closest(".no-adv")) return;
-  if (cur === 0 && !started) { startExperience(); return; }
-  if (cur === 6) return;
-  goNext();
-});
-/* 手机/iOS/微信内核：对非交互 div 的 click 合成不可靠，用 touchend 兜底 */
+/* 微信内 div 的 click 合成不可靠：封面任意点按（含按钮）都走 touch 通道 */
 document.getElementById("stage").addEventListener("touchend", e => {
-  if (e.target.closest(".no-adv")) return;   // 按钮等交互元素走自身 click
-  if (cur === 6 || cur >= pages.length - 1) return; // 求婚页必须按按钮；终章无推进
+  if (cur >= pages.length - 1) return;       // 终章无推进
+  if (cur === 0) {                           // 封面：任意点按＝开始（含按钮）
+    e.preventDefault();
+    startExperience();
+    return;
+  }
+  if (e.target.closest(".no-adv")) return;   // 其余页面的按钮走自身 click
+  if (cur === 6) return;                     // 求婚页必须按按钮
   e.preventDefault();                        // 阻止合成 click，避免双翻页
-  if (cur === 0 && !started) { startExperience(); return; }
   goNext();
 }, { passive: false });
 
-/* 封面：起音乐 + 进入（点按钮或任意位置均可） */
+/* 桌面 click 通道（手机走上面的 touchend） */
+document.getElementById("stage").addEventListener("click", e => {
+  if (e.target.closest(".no-adv")) return;
+  if (cur === 0) { startExperience(); return; }
+  if (cur === 6) return;
+  goNext();
+});
+
+/* 封面：起音乐 + 进入（点按钮或任意位置均可；若已自动播放则仅翻页） */
 function startExperience() {
-  if (started) return;
-  started = true;
-  bgm.play().catch(() => {});
-  disc.classList.add("show");
+  if (!started) {
+    started = true;
+    bgm.play().catch(() => {});
+    disc.classList.add("show");
+  }
   goNext();
 }
 document.getElementById("startBtn").addEventListener("click", e => {
   e.stopPropagation();
   startExperience();
 });
-disc.addEventListener("click", () => {
+function toggleMusic() {
   if (bgm.paused) { bgm.play().catch(() => {}); disc.classList.remove("paused"); }
   else { bgm.pause(); disc.classList.add("paused"); }
-});
+}
+disc.addEventListener("click", toggleMusic);
+disc.addEventListener("touchend", e => { e.preventDefault(); toggleMusic(); }, { passive: false });
 
 /* ---------- 第 N 天（数字滚动） ---------- */
 let daysDone = false;
