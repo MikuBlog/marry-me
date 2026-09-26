@@ -348,6 +348,8 @@ function yesDateText() {
 /* ---------- 页面切换 ---------- */
 const pages = [...document.querySelectorAll(".page")];
 let cur = 0, started = false;
+let pageReady = false;      // 当前页文案是否全部展示完（展示完才允许翻页）
+let revealTimer = null;
 const bgm = document.getElementById("bgm");
 const disc = document.getElementById("disc");
 
@@ -373,12 +375,24 @@ else {
 function activate(i) {
   pages.forEach((p, k) => p.classList.toggle("active", k === i));
   cur = i;
-  const hint = pages[i].querySelector(".hint");
-  if (hint) hint.classList.add("on");
   if (i === 4) runDaysCount();
   if (i === 6) startRing();
   if (i === 7) { document.getElementById("yesDate").textContent = yesDateText(); fxStart(); }
   else fxStop();
+  /* 门禁：当前页文案全部浮现完成（最迟的 .ln 结束）后，才显示「轻触，继续」并允许点按翻页 */
+  pageReady = false;
+  if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; }
+  pages[i].querySelectorAll(".hint.on").forEach(h => h.classList.remove("on"));
+  let maxEnd = 0;
+  pages[i].querySelectorAll(".ln").forEach(el => {
+    const idx = parseInt(el.style.getPropertyValue("--i")) || 0;
+    maxEnd = Math.max(maxEnd, idx * 500 + 150 + 950);
+  });
+  revealTimer = setTimeout(() => {
+    pageReady = true;
+    const hint = pages[i].querySelector(".hint");
+    if (hint) hint.classList.add("on");
+  }, maxEnd);
 }
 function goNext() {
   if (cur >= pages.length - 1) return;
@@ -386,6 +400,7 @@ function goNext() {
 }
 /* 微信内 div 的 click 合成不可靠：封面任意点按（含按钮）都走 touch 通道 */
 document.getElementById("stage").addEventListener("touchend", e => {
+  if (!pageReady) { e.preventDefault(); return; }  // 文案未展示完：点按无效
   if (cur >= pages.length - 1) return;       // 终章无推进
   if (cur === 0) {                           // 封面：任意点按＝开始（含按钮）
     e.preventDefault();
@@ -400,6 +415,7 @@ document.getElementById("stage").addEventListener("touchend", e => {
 
 /* 桌面 click 通道（手机走上面的 touchend） */
 document.getElementById("stage").addEventListener("click", e => {
+  if (!pageReady) return;                    // 文案未展示完：点按无效
   if (e.target.closest(".no-adv")) return;
   if (cur === 0) { startExperience(); return; }
   if (cur === 6) return;
@@ -408,6 +424,7 @@ document.getElementById("stage").addEventListener("click", e => {
 
 /* 封面：起音乐 + 进入（点按钮或任意位置均可；若已自动播放则仅翻页） */
 function startExperience() {
+  if (!pageReady) return;                    // 文案未展示完：点按无效
   if (!started) {
     started = true;
     bgm.play().catch(() => {});
@@ -500,6 +517,7 @@ function startRing() {
 
 /* ---------- 我愿意 ---------- */
 function accept() {
+  if (!pageReady) return;                    // 文案未展示完：点按无效
   document.getElementById("yesDate").textContent = yesDateText();
   fxBurst(innerWidth / 2, innerHeight * .38, true);
   setTimeout(() => activate(7), 900);
@@ -507,6 +525,7 @@ function accept() {
 document.getElementById("yesBtn").addEventListener("click", e => { e.stopPropagation(); accept(); });
 document.getElementById("replayBtn").addEventListener("click", e => {
   e.stopPropagation();
+  if (!pageReady) return;                    // 文案未展示完：点按无效
   activate(0);
 });
 
