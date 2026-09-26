@@ -65,11 +65,18 @@
   .page.active .hint.on { animation:breathe 2.4s ease-in-out infinite; }
   @keyframes breathe { 0%,100%{opacity:.25} 50%{opacity:.95} }
 
+  p.poem .ln { display:inline-block; }
+
   .cover-cta {
-    margin-top:44px; padding:15px 42px; border-radius:999px; font-size:16px; letter-spacing:.2em;
+    display:inline-block; margin-top:44px; padding:15px 42px; border-radius:999px; font-size:16px; letter-spacing:.2em;
     color:#f4e3ac; background:rgba(231,199,106,.06); border:1px solid rgba(231,199,106,.45);
     box-shadow:0 0 30px rgba(231,199,106,.12), inset 0 0 18px rgba(231,199,106,.06);
-    animation:cta 2.6s ease-in-out infinite; cursor:pointer;
+    cursor:pointer;
+  }
+  /* 按钮：先入场浮现，结束后开始呼吸光晕（两条动画并行，互不覆盖） */
+  .page.active .cover-cta {
+    animation: rise .95s cubic-bezier(.2,.7,.3,1) calc(var(--i) * .5s + .15s) forwards,
+               cta 2.6s ease-in-out calc(var(--i) * .5s + 1.15s) infinite;
   }
   @keyframes cta { 0%,100%{ box-shadow:0 0 22px rgba(231,199,106,.10), inset 0 0 14px rgba(231,199,106,.05);}
                    50%{ box-shadow:0 0 44px rgba(231,199,106,.30), inset 0 0 24px rgba(231,199,106,.12);} }
@@ -133,8 +140,8 @@
       <span class="ln dim" style="--i:2">献给 <span class="em" data-cfg="herName"></span> ——</span><br>
       <span class="ln" style="--i:3">有一段信号，穿越了 138 亿年，</span>
       <span class="ln" style="--i:4">只为抵达你。</span></p>
-    <div class="cover-cta no-adv ln" id="startBtn" style="--i:5">轻触，接收宇宙的信号 ✦</div>
-    <div class="cover-note ln" style="--i:6">（打开声音，效果最佳 ♪）</div>
+    <div class="cover-cta no-adv ln" id="startBtn" style="--i:7">轻触，接收宇宙的信号 ✦</div>
+    <div class="cover-note ln" style="--i:8">（打开声音，效果最佳 ♪）</div>
   </section>
 
   <!-- P2 序章 · 星尘 -->
