@@ -57,7 +57,7 @@
 
   .ln { opacity:0; transform:translateY(16px); }
   .page.active .ln { animation:rise .95s cubic-bezier(.2,.7,.3,1) forwards;
-    animation-delay:calc(var(--i) * .5s + .15s); }
+    animation-delay:calc(var(--i) * var(--step, .5s) + .15s); }
   @keyframes rise { to { opacity:1; transform:translateY(0); } }
 
   .hint { position:absolute; bottom:5.5%; left:0; right:0; font-size:13px; letter-spacing:.3em;
@@ -75,8 +75,8 @@
   }
   /* 按钮：先入场浮现，结束后开始呼吸光晕（两条动画并行，互不覆盖） */
   .page.active .cover-cta {
-    animation: rise .95s cubic-bezier(.2,.7,.3,1) calc(var(--i) * .5s + .15s) forwards,
-               cta 2.6s ease-in-out calc(var(--i) * .5s + 1.15s) infinite;
+    animation: rise .95s cubic-bezier(.2,.7,.3,1) calc(var(--i) * var(--step, .5s) + .15s) forwards,
+               cta 2.6s ease-in-out calc(var(--i) * var(--step, .5s) + 1.15s) infinite;
   }
   @keyframes cta { 0%,100%{ box-shadow:0 0 22px rgba(231,199,106,.10), inset 0 0 14px rgba(231,199,106,.05);}
                    50%{ box-shadow:0 0 44px rgba(231,199,106,.30), inset 0 0 24px rgba(231,199,106,.12);} }
@@ -131,8 +131,8 @@
 
 <div id="stage">
 
-  <!-- P1 封面 -->
-  <section class="page" data-p="0">
+  <!-- P1 封面（--step：封面用更快的逐行节奏，按钮更早出现） -->
+  <section class="page" data-p="0" style="--step:.32s">
     <div class="tag">TO GRAVITY</div>
     <h1 class="title ln" style="--i:0">引力</h1>
     <div class="en-sub ln" style="--i:1">G R A V I T Y</div>
@@ -140,8 +140,8 @@
       <span class="ln dim" style="--i:2">献给 <span class="em" data-cfg="herName"></span> ——</span><br>
       <span class="ln" style="--i:3">有一段信号，穿越了 138 亿年，</span>
       <span class="ln" style="--i:4">只为抵达你。</span></p>
-    <div class="cover-cta no-adv ln" id="startBtn" style="--i:7">轻触，接收宇宙的信号 ✦</div>
-    <div class="cover-note ln" style="--i:8">（打开声音，效果最佳 ♪）</div>
+    <div class="cover-cta no-adv ln" id="startBtn" style="--i:6">轻触，接收宇宙的信号 ✦</div>
+    <div class="cover-note ln" style="--i:7">（打开声音，效果最佳 ♪）</div>
   </section>
 
   <!-- P2 序章 · 星尘 -->
@@ -388,7 +388,8 @@ function activate(i) {
   let maxEnd = 0;
   pages[i].querySelectorAll(".ln").forEach(el => {
     const idx = parseInt(el.style.getPropertyValue("--i")) || 0;
-    maxEnd = Math.max(maxEnd, idx * 500 + 150 + 950);
+    const step = (parseFloat(getComputedStyle(el).getPropertyValue("--step")) || 0.5) * 1000;
+    maxEnd = Math.max(maxEnd, idx * step + 150 + 950);
   });
   revealTimer = setTimeout(() => {
     pageReady = true;
