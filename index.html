@@ -88,11 +88,23 @@
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
   }
   .days-unit { font-size:15px; color:#9fb0d0; letter-spacing:.4em; text-indent:.4em; margin-bottom:30px; }
-  .mem-list { width:100%; max-width:340px; margin-top:6px; text-align:left; }
-  .mem { display:flex; align-items:flex-start; gap:12px; padding:10px 4px; font-size:15px;
-    line-height:1.8; color:#d5dcef; border-bottom:1px dashed rgba(160,175,210,.18); }
-  .mem:last-child { border-bottom:none; }
-  .mem .ic { flex:none; filter:drop-shadow(0 0 8px rgba(231,199,106,.35)); }
+  /* ---------- 回忆故事页（拍立得相纸） ---------- */
+  .polaroid { background:#f7f4ee; padding:10px 10px 12px; border-radius:4px; margin-bottom:20px;
+    box-shadow:0 14px 44px rgba(0,0,0,.55); opacity:0; transform:rotate(var(--tilt,-2deg)); }
+  .polaroid.tilt-r { --tilt:2deg; }
+  .page.active .polaroid { animation:prise .95s cubic-bezier(.2,.7,.3,1) calc(var(--i) * var(--step, .5s) + .15s) forwards; }
+  @keyframes prise { from { opacity:0; transform:translateY(16px) rotate(var(--tilt,-2deg)) scale(.96); }
+                     to { opacity:1; transform:translateY(0) rotate(var(--tilt,-2deg)) scale(1); } }
+  .ph-slot { width:min(70vw,264px); aspect-ratio:4/3; position:relative; overflow:hidden;
+    background:linear-gradient(160deg,#1b2547,#101a38); display:flex; align-items:center; justify-content:center; }
+  .ph-slot img { width:100%; height:100%; object-fit:cover; display:block; }
+  .ph-fallback { font-size:58px; line-height:1; filter:drop-shadow(0 6px 18px rgba(0,0,0,.45)); }
+  .ph-date { position:absolute; top:6px; right:8px; font-size:11px; letter-spacing:.08em;
+    color:rgba(255,255,255,.9); text-shadow:0 1px 4px rgba(0,0,0,.55); }
+  .ph-cap { font-size:15px; font-weight:600; color:#4a4038; text-align:center; margin-top:9px; letter-spacing:.06em; }
+  .page.active .ph-slot img, .page.active .ph-fallback { animation:develop 1.6s ease .35s both; }
+  @keyframes develop { from { opacity:0; filter:blur(10px) sepia(.5); transform:scale(1.05); }
+                       to { opacity:1; filter:none; transform:scale(1); } }
 
   #ring { width:min(64vw,260px); height:auto; display:block; margin-bottom:6px; }
   .propose-q { font-size:clamp(30px,9vw,42px); letter-spacing:.14em; color:#fdf3d0; margin:14px 0 34px;
@@ -204,13 +216,13 @@
   </section>
 
   <!-- P5 第三章 · 环游 · 相伴 -->
-  <section class="page" data-p="4">
+  <section class="page" id="daysPage" data-p="4">
     <div class="tag">第三章 · 环游</div>
     <p class="poem ln" style="--i:0"><span class="dim">被你的引力捕获，已经是</span></p>
     <div class="days-num ln" style="--i:1" id="daysNum">0</div>
     <div class="days-unit ln" style="--i:2">天</div>
     <p class="poem ln" style="--i:3; margin-bottom:8px"><span class="dim">这 N 天里——</span></p>
-    <div class="mem-list" id="memList"></div>
+    <p class="poem ln" style="--i:4"><span class="em">有三个瞬间，我到现在都记得。</span></p>
     <div class="hint">轻触，继续 ✦</div>
   </section>
 
@@ -253,7 +265,7 @@
   </section>
 
   <!-- P7 求婚页 -->
-  <section class="page" data-p="6">
+  <section class="page" id="proposePage" data-p="6">
     <svg id="ring" viewBox="0 0 240 250" fill="none"></svg>
     <div class="propose-q ln" style="--i:1">嫁给我，好吗？</div>
     <div class="btn-row no-adv">
@@ -262,7 +274,7 @@
   </section>
 
   <!-- P8 终章 -->
-  <section class="page" data-p="7">
+  <section class="page" id="finalePage" data-p="7">
     <div class="tag">她说愿意</div>
     <p class="poem">
       <span class="ln yes-date" style="--i:0"><span id="yesDate"></span>，<br>你说：我愿意。</span>
@@ -308,10 +320,47 @@ const CONFIG = {
   meetText: "你笑着从我身边走过",    // 【可改】P3 第一次见你的场景，一句话
 
   // 【可改】P5 三个小回忆（icon 可换成任意 emoji）
+  /* 【可改】三个回忆故事页（图文）
+     photo: 照片路径（把照片放进 deploy/photos/ 文件夹，如 "photos/1.jpg"，横竖皆可自动裁剪）；
+            留空 "" 则显示 emoji 插画占位
+     lines: 每页 2~4 行短句，一行一句 */
   memories: [
-    { icon: "🍲", text: "那家火锅店，你总说微辣就好" },
-    { icon: "🌊", text: "青岛的海，你说想再看一次" },
-    { icon: "☔️", text: "下雨天，你把伞悄悄歪向我这边" },
+    {
+      icon: "🍲",
+      chapter: "回忆 · 一",
+      title: "微辣就好",
+      date: "2023 · 春",
+      photo: "",
+      lines: [
+        "那家火锅店，你总说微辣就好，",
+        "结果辣得眼泪直流，",
+        "你却擦着眼睛笑着说：下次还来。",
+      ],
+    },
+    {
+      icon: "🌊",
+      chapter: "回忆 · 二",
+      title: "想再去看的海",
+      date: "2024 · 夏",
+      photo: "",
+      lines: [
+        "青岛的风把你的头发吹乱，",
+        "你望着海说，想每年都来一次，",
+        "我说好——以后每年，我都带你来。",
+      ],
+    },
+    {
+      icon: "☔️",
+      chapter: "回忆 · 三",
+      title: "偏向我的伞",
+      date: "",
+      photo: "",
+      lines: [
+        "那天的雨下得又急又密，",
+        "一把伞，你悄悄歪向我这边，",
+        "你半边肩膀湿透了，我的心也是。",
+      ],
+    },
   ],
 };
 /* ══════════════════════════ 配置区结束 ══════════════════════════ */
@@ -321,14 +370,29 @@ document.querySelectorAll("[data-cfg]").forEach(el => {
   el.textContent = CONFIG[el.dataset.cfg] ?? "";
 });
 document.title = `引力 · ${CONFIG.herEnglishName} —— 献给${CONFIG.herName}`;
-const memList = document.getElementById("memList");
+/* ---------- 由 CONFIG 生成「回忆故事页」（插在环游页之后） ---------- */
+let storyAnchor = document.getElementById("daysPage");
 CONFIG.memories.forEach((m, i) => {
-  const div = document.createElement("div");
-  div.className = "mem ln";
-  div.style.setProperty("--i", 4 + i);
-  div.innerHTML = `<span class="ic">${m.icon}</span><span>${m.text}</span>`;
-  memList.appendChild(div);
+  const sec = document.createElement("section");
+  sec.className = "page";
+  const lines = m.lines.map((ln, j) =>
+    `<span class="ln${j === m.lines.length - 1 ? " em" : ""}" style="--i:${j + 1}">${ln}</span>`).join("<br>");
+  sec.innerHTML = `
+    <div class="tag">${m.chapter || "回忆 · " + "一二三"[i]}</div>
+    <div class="polaroid ${["tilt-l", "tilt-r", "tilt-l"][i % 3]}" style="--i:0">
+      <div class="ph-slot">
+        ${m.photo ? `<img src="${m.photo}" alt="">` : `<div class="ph-fallback">${m.icon}</div>`}
+        ${m.date ? `<span class="ph-date">${m.date}</span>` : ""}
+      </div>
+      <div class="ph-cap">${m.title || ""}</div>
+    </div>
+    <p class="poem">${lines}</p>
+    <div class="hint">轻触，继续 ✦</div>`;
+  storyAnchor.insertAdjacentElement("afterend", sec);
+  storyAnchor = sec;
 });
+/* 预加载回忆照片（进页面就开始拉取，翻到时即已就绪） */
+CONFIG.memories.forEach(m => { if (m.photo) { const im = new Image(); im.src = m.photo; } });
 
 /* ---------- 上海时区工具 ---------- */
 const TZ = "Asia/Shanghai";
@@ -352,6 +416,9 @@ const pages = [...document.querySelectorAll(".page")];
 let cur = 0, started = false;
 let pageReady = false;      // 当前页文案是否全部展示完（展示完才允许翻页）
 let revealTimer = null;
+const DAYS = pages.findIndex(p => p.id === "daysPage");
+const PROPOSE = pages.findIndex(p => p.id === "proposePage");
+const FINALE = pages.findIndex(p => p.id === "finalePage");
 const bgm = document.getElementById("bgm");
 const disc = document.getElementById("disc");
 
@@ -377,9 +444,9 @@ else {
 function activate(i) {
   pages.forEach((p, k) => p.classList.toggle("active", k === i));
   cur = i;
-  if (i === 4) runDaysCount();
-  if (i === 6) startRing();
-  if (i === 7) { document.getElementById("yesDate").textContent = yesDateText(); fxStart(); }
+  if (i === DAYS) runDaysCount();
+  if (i === PROPOSE) startRing();
+  if (i === FINALE) { document.getElementById("yesDate").textContent = yesDateText(); fxStart(); }
   else fxStop();
   /* 门禁：当前页文案全部浮现完成（最迟的 .ln 结束）后，才显示「轻触，继续」并允许点按翻页 */
   pageReady = false;
@@ -411,7 +478,7 @@ document.getElementById("stage").addEventListener("touchend", e => {
     return;
   }
   if (e.target.closest(".no-adv")) return;   // 其余页面的按钮走自身 click
-  if (cur === 6) return;                     // 求婚页必须按按钮
+  if (cur === PROPOSE) return;              // 求婚页必须按按钮
   e.preventDefault();                        // 阻止合成 click，避免双翻页
   goNext();
 }, { passive: false });
@@ -421,7 +488,7 @@ document.getElementById("stage").addEventListener("click", e => {
   if (!pageReady) return;                    // 文案未展示完：点按无效
   if (e.target.closest(".no-adv")) return;
   if (cur === 0) { startExperience(); return; }
-  if (cur === 6) return;
+  if (cur === PROPOSE) return;
   goNext();
 });
 
@@ -523,7 +590,7 @@ function accept() {
   if (!pageReady) return;                    // 文案未展示完：点按无效
   document.getElementById("yesDate").textContent = yesDateText();
   fxBurst(innerWidth / 2, innerHeight * .38, true);
-  setTimeout(() => activate(7), 900);
+  setTimeout(() => activate(FINALE), 900);
 }
 document.getElementById("yesBtn").addEventListener("click", e => { e.stopPropagation(); accept(); });
 document.getElementById("replayBtn").addEventListener("click", e => {
