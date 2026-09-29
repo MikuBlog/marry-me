@@ -225,8 +225,9 @@
     <p class="poem ln" style="--i:0"><span class="dim">被你的引力捕获，已经是</span></p>
     <div class="days-num ln" style="--i:1" id="daysNum">0</div>
     <div class="days-unit ln" style="--i:2">天</div>
-    <p class="poem ln" style="--i:3; margin-bottom:8px"><span class="dim">这 N 天里——</span></p>
-    <p class="poem ln" style="--i:4"><span class="em">有四个瞬间，我到现在都记得。</span></p>
+    <p class="poem ln" style="--i:3; margin-bottom:8px"><span class="dim">这 <span id="daysText">N</span> 天里——</span></p>
+    <p class="poem"><span class="ln em" style="--i:4">有很多小确幸，</span><br>
+    <span class="ln em" style="--i:5">而其中几个瞬间，让我记忆犹新。</span></p>
     <div class="hint">轻触，继续 ✦</div>
   </section>
 
@@ -544,6 +545,7 @@ let daysDone = false;
 function runDaysCount() {
   const el = document.getElementById("daysNum");
   const target = daysTogether();
+  document.getElementById("daysText").textContent = target;
   if (daysDone) { el.textContent = target; return; }
   daysDone = true;
   const t0 = performance.now(), dur = 2200;
