@@ -101,6 +101,10 @@
   .ph-fallback { font-size:58px; line-height:1; filter:drop-shadow(0 6px 18px rgba(0,0,0,.45)); }
   .ph-date { position:absolute; top:6px; right:8px; font-size:11px; letter-spacing:.08em;
     color:rgba(255,255,255,.9); text-shadow:0 1px 4px rgba(0,0,0,.55); }
+  .ph-area { position:relative; width:min(70vw,264px); margin:0 auto; }
+  /* 双图回忆：两张小方照并排，共用一张拍立得 */
+  .ph-duo { display:flex; gap:6px; }
+  .ph-duo .ph-slot { flex:1; width:auto; aspect-ratio:1/1; }
   .ph-cap { font-size:15px; font-weight:600; color:#4a4038; text-align:center; margin-top:9px; letter-spacing:.06em; }
   .page.active .ph-slot img, .page.active .ph-fallback { animation:develop 1.6s ease .35s both; }
   @keyframes develop { from { opacity:0; filter:blur(10px) sepia(.5); transform:scale(1.05); }
@@ -222,7 +226,7 @@
     <div class="days-num ln" style="--i:1" id="daysNum">0</div>
     <div class="days-unit ln" style="--i:2">天</div>
     <p class="poem ln" style="--i:3; margin-bottom:8px"><span class="dim">这 N 天里——</span></p>
-    <p class="poem ln" style="--i:4"><span class="em">有三个瞬间，我到现在都记得。</span></p>
+    <p class="poem ln" style="--i:4"><span class="em">有四个瞬间，我到现在都记得。</span></p>
     <div class="hint">轻触，继续 ✦</div>
   </section>
 
@@ -319,46 +323,60 @@ const CONFIG = {
   meetSeason: "秋天",              // P3 相遇的季节
   meetText: "你笑着从我身边走过",    // 【可改】P3 第一次见你的场景，一句话
 
-  // 【可改】P5 三个小回忆（icon 可换成任意 emoji）
-  /* 【可改】三个回忆故事页（图文）
-     photo: 照片路径（把照片放进 deploy/photos/ 文件夹，如 "photos/1.jpg"，横竖皆可自动裁剪）；
-            留空 "" 则显示 emoji 插画占位
-     lines: 每页 2~4 行短句，一行一句 */
+  // 【可改】回忆故事页（图文）
+  /* photo: 一张照片路径 "photos/x.jpg"；photos: 两张 ["photos/a.jpg","photos/b.jpg"]（并排双图）
+     留空则显示 emoji 占位；lines: 每页 2~4 行短句，一行一句 */
   memories: [
     {
-      icon: "🍲",
+      icon: "🥂",
       chapter: "回忆 · 一",
-      title: "微辣就好",
-      date: "2022 · 秋",
+      title: "你好，女朋友",
+      date: "2022.09.18",
       photo: "photos/1.jpg",
       lines: [
-        "那家火锅店，你总说微辣就好，",
-        "结果辣得眼泪直流，",
-        "你却擦着眼睛笑着说：下次还来。",
+        "Cider 周年庆那晚，我们玩得好开心，",
+        "笑闹里，我鼓起勇气问你：",
+        "「我喜欢你，能做我女朋友吗？」",
+        "你轻轻说了声：「好。」",
       ],
     },
     {
-      icon: "🌊",
+      icon: "🎂",
       chapter: "回忆 · 二",
-      title: "想再去看的海",
+      title: "两个愿望",
       date: "2022 · 冬",
       photo: "photos/2.jpg",
       lines: [
-        "青岛的风把你的头发吹乱，",
-        "你望着海说，想每年都来一次，",
-        "我说好——以后每年，我都带你来。",
+        "不久后是你的生日，第一次为你庆生，",
+        "你打扮得漂漂亮亮，在蜡烛前许愿，",
+        "其实那晚我也偷偷许了一个：",
+        "未来的路，咱们一块走。",
       ],
     },
     {
-      icon: "☔️",
+      icon: "🐱",
       chapter: "回忆 · 三",
-      title: "偏向我的伞",
+      title: "欢迎回家，gg",
       date: "2023 · 夏",
-      photo: "photos/3.jpg",
+      photos: ["photos/4.jpg", "photos/5.jpg"],
       lines: [
-        "那天的雨下得又急又密，",
-        "一把伞，你悄悄歪向我这边，",
-        "你半边肩膀湿透了，我的心也是。",
+        "2023 年，很多事都不如我们所愿，",
+        "但上天关上一道门，也悄悄打开一扇窗——",
+        "窗里跑进来一只小猫，他叫 gg，",
+        "像个小孩，让咱们的小家更完整了。",
+      ],
+    },
+    {
+      icon: "🧳",
+      chapter: "回忆 · 四",
+      title: "蓝精灵的远行",
+      date: "在路上",
+      photos: ["photos/3.jpg", "photos/6.jpg"],
+      lines: [
+        "偶尔出一趟远门，把风光都收进眼里，",
+        "每一站你都有专属的 OOTD，",
+        "把风景衬得更好看了。",
+        "而我最难忘的，还是蓝精灵般活力的你。",
       ],
     },
   ],
@@ -377,11 +395,17 @@ CONFIG.memories.forEach((m, i) => {
   sec.className = "page";
   const lines = m.lines.map((ln, j) =>
     `<span class="ln${j === m.lines.length - 1 ? " em" : ""}" style="--i:${j + 1}">${ln}</span>`).join("<br>");
+  const pics = m.photos && m.photos.length ? m.photos : (m.photo ? [m.photo] : []);
+  const photoHtml = pics.length
+    ? (pics.length === 1
+        ? `<div class="ph-slot"><img src="${pics[0]}" alt=""></div>`
+        : `<div class="ph-duo">${pics.map(p => `<div class="ph-slot"><img src="${p}" alt=""></div>`).join("")}</div>`)
+    : `<div class="ph-slot"><div class="ph-fallback">${m.icon}</div></div>`;
   sec.innerHTML = `
-    <div class="tag">${m.chapter || "回忆 · " + "一二三"[i]}</div>
-    <div class="polaroid ${["tilt-l", "tilt-r", "tilt-l"][i % 3]}" style="--i:0">
-      <div class="ph-slot">
-        ${m.photo ? `<img src="${m.photo}" alt="">` : `<div class="ph-fallback">${m.icon}</div>`}
+    <div class="tag">${m.chapter || "回忆 · " + "一二三四"[i]}</div>
+    <div class="polaroid ${["tilt-l", "tilt-r", "tilt-l", "tilt-r"][i % 4]}" style="--i:0">
+      <div class="ph-area">
+        ${photoHtml}
         ${m.date ? `<span class="ph-date">${m.date}</span>` : ""}
       </div>
       <div class="ph-cap">${m.title || ""}</div>
@@ -392,7 +416,9 @@ CONFIG.memories.forEach((m, i) => {
   storyAnchor = sec;
 });
 /* 预加载回忆照片（进页面就开始拉取，翻到时即已就绪） */
-CONFIG.memories.forEach(m => { if (m.photo) { const im = new Image(); im.src = m.photo; } });
+CONFIG.memories.forEach(m => {
+  [].concat(m.photos || [], m.photo || []).forEach(src => { const im = new Image(); im.src = src; });
+});
 
 /* ---------- 上海时区工具 ---------- */
 const TZ = "Asia/Shanghai";
