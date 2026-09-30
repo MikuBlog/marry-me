@@ -118,6 +118,14 @@
     padding:14px 40px; border-radius:999px; font-size:17px; letter-spacing:.14em; font-weight:700;
     color:#2a1c05; background:linear-gradient(135deg,#f6e2a0,#c9992f); border:none; cursor:pointer;
     box-shadow:0 0 26px rgba(231,199,106,.4);
+    transition:transform .15s ease;
+  }
+  .btn-yes:active { transform:scale(.9); }             /* 按压即时反馈 */
+  /* 点击后：按钮持续发光脉动，表示已被接住（音效播放期间不再死板） */
+  .btn-yes.accepted { pointer-events:none; animation:yesGlow 1s ease-in-out infinite; }
+  @keyframes yesGlow {
+    0%,100% { transform:scale(1);     box-shadow:0 0 26px rgba(231,199,106,.45); }
+    50%     { transform:scale(1.08);  box-shadow:0 0 60px rgba(231,199,106,.9); }
   }
 
   .yes-date { font-size:clamp(19px,5.4vw,23px); color:#fdf3d0; letter-spacing:.1em; line-height:1.9; }
@@ -475,7 +483,7 @@ function activate(i) {
   pages.forEach((p, k) => p.classList.toggle("active", k === i));
   cur = i;
   if (i === DAYS) runDaysCount();
-  if (i === PROPOSE) { accepted = false; confirmSfx.pause(); confirmSfx.currentTime = 0; startRing(); }
+  if (i === PROPOSE) { accepted = false; document.getElementById("yesBtn").classList.remove("accepted"); confirmSfx.pause(); confirmSfx.currentTime = 0; startRing(); }
   if (i === FINALE) { document.getElementById("yesDate").textContent = yesDateText(); fxStart(); }
   else fxStop();
   /* 门禁：当前页文案全部浮现完成（最迟的 .ln 结束）后，才显示「轻触，继续」并允许点按翻页 */
@@ -623,6 +631,11 @@ function accept() {
   if (!pageReady || accepted) return;        // 文案未展示完/已点过：点按无效
   accepted = true;
   document.getElementById("yesDate").textContent = yesDateText();
+  /* 即时反馈：按钮进入脉动态 + 按钮处小烟花（大烟花留给终章） */
+  const btn = document.getElementById("yesBtn");
+  btn.classList.add("accepted");
+  const r = btn.getBoundingClientRect();
+  fxBurst(r.left + r.width / 2, r.top + r.height / 2, false);
   let moved = false;
   const goFinale = () => {
     if (moved) return;                        // ended/兜底/回退三路只走一次
