@@ -411,8 +411,8 @@ CONFIG.memories.forEach((m, i) => {
   const pics = m.photos && m.photos.length ? m.photos : (m.photo ? [m.photo] : []);
   const photoHtml = pics.length
     ? (pics.length === 1
-        ? `<div class="ph-slot"><img src="${pics[0]}" alt=""></div>`
-        : `<div class="ph-duo">${pics.map(p => `<div class="ph-slot"><img src="${p}" alt=""></div>`).join("")}</div>`)
+        ? `<div class="ph-slot"><img data-src="${pics[0]}" alt=""></div>`
+        : `<div class="ph-duo">${pics.map(p => `<div class="ph-slot"><img data-src="${p}" alt=""></div>`).join("")}</div>`)
     : `<div class="ph-slot"><div class="ph-fallback">${m.icon}</div></div>`;
   sec.innerHTML = `
     <div class="tag">${m.chapter || "回忆 · " + "一二三四"[i]}</div>
@@ -428,10 +428,23 @@ CONFIG.memories.forEach((m, i) => {
   storyAnchor.insertAdjacentElement("afterend", sec);
   storyAnchor = sec;
 });
-/* 预加载回忆照片（进页面就开始拉取，翻到时即已就绪） */
-CONFIG.memories.forEach(m => {
-  [].concat(m.photos || [], m.photo || []).forEach(src => { const im = new Image(); im.src = src; });
-});
+/* 预加载回忆照片——给音乐让位：等音乐缓冲到可连贯播放（canplaythrough）
+   或 4s 兜底后再拉取。弱网时避免 ~1.1MB 照片与音乐抢带宽；
+   照片在她翻到回忆页（几十秒后）之前就绪即可，晚几秒无感 */
+let photosQueued = false;
+function preloadPhotos() {
+  if (photosQueued) return;
+  photosQueued = true;
+  CONFIG.memories.forEach(m => {
+    [].concat(m.photos || [], m.photo || []).forEach(src => {
+      const im = new Image();
+      im.fetchPriority = "low";   // 即使开始加载也不再与音频抢优先级
+      im.src = src;
+    });
+  });
+}
+document.getElementById("bgm").addEventListener("canplaythrough", preloadPhotos, { once: true });
+setTimeout(preloadPhotos, 4000);
 
 /* ---------- 上海时区工具 ---------- */
 const TZ = "Asia/Shanghai";
@@ -483,6 +496,8 @@ else {
 function activate(i) {
   pages.forEach((p, k) => p.classList.toggle("active", k === i));
   cur = i;
+  /* 照片按需加载：进到该页才赋 src（正常情况下预热缓存已先行拉好，此处秒出） */
+  pages[i].querySelectorAll("img[data-src]").forEach(im => { im.src = im.dataset.src; });
   if (i === DAYS) runDaysCount();
   if (i === PROPOSE) { accepted = false; document.getElementById("yesBtn").classList.remove("accepted"); confirmSfx.pause(); confirmSfx.currentTime = 0; startRing(); }
   if (i === FINALE) { document.getElementById("yesDate").textContent = yesDateText(); fxStart(); }
