@@ -311,6 +311,8 @@
 <canvas id="fx"></canvas>
 <div class="disc" id="disc">♪</div>
 <audio id="bgm" src="music.m4a" loop preload="auto"></audio>
+<!-- 「我愿意」确认音效：进页面即预加载，点按后播完再进终章 -->
+<audio id="confirmSfx" src="confirm.m4a" preload="auto"></audio>
 
 <script>
 /* ════════════════════════════════════════════════════════════
@@ -473,7 +475,7 @@ function activate(i) {
   pages.forEach((p, k) => p.classList.toggle("active", k === i));
   cur = i;
   if (i === DAYS) runDaysCount();
-  if (i === PROPOSE) startRing();
+  if (i === PROPOSE) { accepted = false; confirmSfx.pause(); confirmSfx.currentTime = 0; startRing(); }
   if (i === FINALE) { document.getElementById("yesDate").textContent = yesDateText(); fxStart(); }
   else fxStop();
   /* 门禁：当前页文案全部浮现完成（最迟的 .ln 结束）后，才显示「轻触，继续」并允许点按翻页 */
@@ -615,11 +617,25 @@ function startRing() {
 }
 
 /* ---------- 我愿意 ---------- */
+const confirmSfx = document.getElementById("confirmSfx");
+let accepted = false;
 function accept() {
-  if (!pageReady) return;                    // 文案未展示完：点按无效
+  if (!pageReady || accepted) return;        // 文案未展示完/已点过：点按无效
+  accepted = true;
   document.getElementById("yesDate").textContent = yesDateText();
-  fxBurst(innerWidth / 2, innerHeight * .38, true);
-  setTimeout(() => activate(FINALE), 900);
+  let moved = false;
+  const goFinale = () => {
+    if (moved) return;                        // ended/兜底/回退三路只走一次
+    moved = true;
+    fxBurst(innerWidth / 2, innerHeight * .38, true);
+    setTimeout(() => activate(FINALE), 800);
+  };
+  confirmSfx.play().then(() => {
+    confirmSfx.addEventListener("ended", goFinale, { once: true });
+    /* 兜底：万一 ended 事件丢失，按（时长+3s）强制进入终章 */
+    const wait = isFinite(confirmSfx.duration) ? confirmSfx.duration * 1000 + 3000 : 12000;
+    setTimeout(goFinale, wait);
+  }).catch(() => setTimeout(goFinale, 900));  // 音效播不出来：回退为旧行为
 }
 document.getElementById("yesBtn").addEventListener("click", e => { e.stopPropagation(); accept(); });
 document.getElementById("replayBtn").addEventListener("click", e => {
