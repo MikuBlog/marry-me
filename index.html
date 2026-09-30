@@ -428,23 +428,32 @@ CONFIG.memories.forEach((m, i) => {
   storyAnchor.insertAdjacentElement("afterend", sec);
   storyAnchor = sec;
 });
-/* 预加载回忆照片——给音乐让位：等音乐缓冲到可连贯播放（canplaythrough）
-   或 4s 兜底后再拉取。弱网时避免 ~1.1MB 照片与音乐抢带宽；
-   照片在她翻到回忆页（几十秒后）之前就绪即可，晚几秒无感 */
+/* 预加载回忆照片——给音乐让位，三级触发（汇入同一闸门，只跑一次）：
+   ① canplaythrough：音乐可连贯播放 → 低优先级开始预热（不抢音乐剩余下载）
+   ② progress 且缓冲到曲尾：音乐完整下载完 → 全速预热（此时带宽已无竞争）
+   ③ 4s 兜底：事件万一没触发也照常预热
+   目标：她最早也要点 40s+ 才翻到回忆页，照片必然已就绪 */
 let photosQueued = false;
-function preloadPhotos() {
+function preloadPhotos(priority) {
   if (photosQueued) return;
   photosQueued = true;
   CONFIG.memories.forEach(m => {
     [].concat(m.photos || [], m.photo || []).forEach(src => {
       const im = new Image();
-      im.fetchPriority = "low";   // 即使开始加载也不再与音频抢优先级
+      im.fetchPriority = priority === "high" ? "high" : "low";
       im.src = src;
     });
   });
 }
-document.getElementById("bgm").addEventListener("canplaythrough", preloadPhotos, { once: true });
-setTimeout(preloadPhotos, 4000);
+const bgmEl = document.getElementById("bgm");
+bgmEl.addEventListener("canplaythrough", () => preloadPhotos("low"), { once: true });
+bgmEl.addEventListener("progress", () => {
+  const b = bgmEl.buffered;
+  if (b.length && isFinite(bgmEl.duration) && b.end(b.length - 1) >= bgmEl.duration - 0.5) {
+    preloadPhotos("high");
+  }
+});
+setTimeout(() => preloadPhotos("low"), 4000);
 
 /* ---------- 上海时区工具 ---------- */
 const TZ = "Asia/Shanghai";
