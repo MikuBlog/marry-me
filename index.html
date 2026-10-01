@@ -37,10 +37,13 @@
   .page {
     position:absolute; inset:0; display:flex; flex-direction:column;
     justify-content:center; align-items:center; text-align:center;
-    padding:40px 30px 96px; opacity:0; pointer-events:none;
-    transition:opacity .8s ease;
+    padding:40px 30px 96px; opacity:0; pointer-events:none; visibility:hidden;
+    transition:opacity .8s ease, visibility 0s linear .8s;
   }
-  .page.active { opacity:1; pointer-events:auto; cursor:pointer; }
+  /* 淡出完成后才切 visibility:hidden（浏览器跳过不可见页的 SMIL/重绘）；
+     进入时立即 visible、opacity 同时过渡，翻页视觉不变 */
+  .page.active { opacity:1; pointer-events:auto; cursor:pointer; visibility:visible;
+    transition:opacity .8s ease; }
 
   .tag { font-size:12px; letter-spacing:.45em; color:#c9a84c; text-indent:.45em; margin-bottom:36px; }
   .tag .en { display:block; margin-top:5px; font-size:9px; letter-spacing:.5em; text-indent:.5em; color:#7e90b6; opacity:.85; }
@@ -896,7 +899,7 @@ function initSky() {
   }));
 }
 let lastMeteor = 0;
-function drawSky(t) {
+function drawSky(t, dt) {
   sctx.clearRect(0, 0, sky.width, sky.height);
   for (const s of stars) {
     const a = s.base + Math.sin(t / 1000 * s.sp + s.ph) * .3;
@@ -912,7 +915,7 @@ function drawSky(t) {
   }
   meteors = meteors.filter(m => m.life > 0);
   for (const m of meteors) {
-    m.x += m.vx * 6; m.y += m.vy * 6; m.life -= .016;
+    m.x += m.vx * 6 * dt; m.y += m.vy * 6 * dt; m.life -= .016 * dt;
     const g = sctx.createLinearGradient(m.x, m.y, m.x - m.vx * 26, m.y - m.vy * 26);
     g.addColorStop(0, `rgba(255,244,214,${Math.max(m.life, 0)})`);
     g.addColorStop(1, "rgba(255,244,214,0)");
@@ -926,7 +929,7 @@ function drawSky(t) {
 const fxc = document.getElementById("fx"), fctx = fxc.getContext("2d");
 sizeCanvas(fxc);
 const COLORS = ["#f6e2a0", "#f0b6c8", "#cfe0ff", "#ffffff", "#e7c76a"];
-let fparts = [], fxRunning = false, fxTimer = null;
+let fparts = [], fxRunning = false, fxTimer = null, lastFxT = 0;
 function fxBurst(x, y, big = false) {
   if (fparts.length > 2200) return;  // 粒子上限：防止后台节流时无限堆积
   const n = big ? 130 : 80 + Math.random() * 40;
@@ -939,19 +942,23 @@ function fxBurst(x, y, big = false) {
   }
   ensureFxLoop();
 }
-function fxLoop() {
+function fxLoop(t) {
+  /* 与流星同款帧率归一：粒子速度/重力/摩擦/衰减乘 dt，120Hz 高刷下不再倍速消散 */
+  const dt = lastFxT ? Math.min((t - lastFxT) / 16.67, 4) : 1;
+  lastFxT = t;
   fctx.clearRect(0, 0, fxc.width, fxc.height);
   fparts = fparts.filter(p => p.life > 0);
   for (const p of fparts) {
-    p.x += p.vx; p.y += p.vy; p.vy += .028 * DPR; p.vx *= .985; p.vy *= .985;
-    p.life -= p.decay;
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += .028 * DPR * dt;
+    p.vx *= Math.pow(.985, dt); p.vy *= Math.pow(.985, dt);
+    p.life -= p.decay * dt;
     fctx.globalAlpha = Math.max(p.life, 0);
     fctx.fillStyle = p.col;
     fctx.beginPath(); fctx.arc(p.x, p.y, 1.7 * DPR * p.life + .4, 0, 7); fctx.fill();
   }
   fctx.globalAlpha = 1;
   if (fparts.length > 0) requestAnimationFrame(fxLoop);
-  else fxRunning = false;
+  else { fxRunning = false; lastFxT = 0; }
 }
 function ensureFxLoop() {
   if (!fxRunning) { fxRunning = true; requestAnimationFrame(fxLoop); }
@@ -966,7 +973,14 @@ function fxStart() {
 function fxStop() { clearInterval(fxTimer); }
 
 /* ---------- 主循环 / 事件 ---------- */
-function loop(t) { drawSky(t); requestAnimationFrame(loop); }
+let lastLoopT = 0;
+function loop(t) {
+  /* 帧率归一步长：60fps=1、120fps=0.5、30fps=2——流星速度/寿命与帧率解耦（高刷屏不再倍速） */
+  const dt = lastLoopT ? Math.min((t - lastLoopT) / 16.67, 4) : 1;
+  lastLoopT = t;
+  drawSky(t, dt);
+  requestAnimationFrame(loop);
+}
 initSky(); requestAnimationFrame(loop);
 
 /* ---------- 测试面板（URL 带 ?test=true 显示：数字键快速跳页） ---------- */
