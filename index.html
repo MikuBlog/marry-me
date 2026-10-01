@@ -157,6 +157,17 @@
     background:linear-gradient(180deg,#fdf3d0,#e7c76a 60%,#b98d2e);
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
     text-shadow:0 0 46px rgba(231,199,106,.28); }
+  /* 刮刮乐：canvas 涂层盖住密钥，刮开 ≥80% 全显 */
+  .egg-scratch { position:relative; display:inline-block; margin:10px 0 6px; }
+  .egg-scratch .egg-code { margin:0; }
+  #scratchPad { position:absolute; inset:0; width:100%; height:100%; touch-action:none;
+    border-radius:10px; border:1px solid rgba(231,199,106,.3); cursor:pointer; }
+  .egg-code.revealed { animation:eggGlow 1.6s ease-in-out infinite; }
+  @keyframes eggGlow { 0%,100%{ filter:drop-shadow(0 0 8px rgba(231,199,106,.25)); }
+                       50%{ filter:drop-shadow(0 0 26px rgba(231,199,106,.7)); } }
+  /* 回到开头：密钥刮开后才浮现 */
+  .egg-replay { opacity:0; transition:opacity .9s ease; pointer-events:none; }
+  .egg-replay.show { opacity:1; pointer-events:auto; }
 
   /* 回忆照片点按冒出的爱心 */
   .heart-pop { position:fixed; z-index:3; pointer-events:none; line-height:1;
@@ -332,7 +343,6 @@
       我的「旋」，绕着你的「引」——<span class="em">一圈，就是一生。</span>
     </p>
     <p class="ln dim" style="--i:7; margin-top:18px; font-size:14px; color:#8fa0c0;">—— <span data-cfg="myName"></span>，永远绕着你转的人</p>
-    <button class="replay no-adv ln" style="--i:8" id="replayBtn">↺ 从头再读一遍</button>
     <div class="hint">轻触，还有一件事 ✦</div>
   </section>
 
@@ -357,8 +367,12 @@
       <span class="ln" style="--i:3">锁在<span data-cfg="eggLocation"></span>的盒子里。</span><br>
       <span class="ln dim" style="--i:4">开箱密钥，你一定记得——</span>
     </p>
-    <div class="egg-code ln" style="--i:5"><span data-cfg="eggPassword"></span></div>
+    <div class="egg-scratch ln" style="--i:5">
+      <div class="egg-code" id="eggCode"><span data-cfg="eggPassword"></span></div>
+      <canvas id="scratchPad"></canvas>
+    </div>
     <p class="poem"><span class="ln dim" style="--i:6; font-size:13px;">（<span data-cfg="eggHint"></span>）</span></p>
+    <button class="replay no-adv egg-replay" id="replayBtn" style="margin-top:30px;">↺ 从头再读一遍</button>
   </section>
 
 </div>
@@ -553,6 +567,7 @@ let revealTimer = null;
 const DAYS = pages.findIndex(p => p.id === "daysPage");
 const PROPOSE = pages.findIndex(p => p.id === "proposePage");
 const FINALE = pages.findIndex(p => p.id === "finalePage");
+const EGG = pages.findIndex(p => p.id === "eggPage");
 const bgm = document.getElementById("bgm");
 const disc = document.getElementById("disc");
 
@@ -584,6 +599,7 @@ function activate(i) {
   if (i === PROPOSE) { accepted = false; document.getElementById("yesBtn").classList.remove("accepted"); confirmSfx.pause(); confirmSfx.currentTime = 0; startRing(); typePropose(); }
   if (i === FINALE) { document.getElementById("yesDate").textContent = yesDateText(); fxStart(); }
   else fxStop();
+  if (i === EGG) { initScratch(); clearTimeout(eggFallback); eggFallback = setTimeout(showReplay, 30000); }
   /* 门禁：当前页文案全部浮现完成（最迟的 .ln 结束）后，才显示「轻触，继续」并允许点按翻页 */
   pageReady = false;
   if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; }
@@ -738,6 +754,68 @@ function typePropose() {
       if (k >= text.length) clearInterval(typeTick);   // 光标留着闪烁，等她的答案
     }, 250);
   }, 2100);
+}
+
+/* ---------- P9 密钥：刮刮乐涂层（刮开 ≥80% 全显） ---------- */
+let scratchInit = false, scratchDone = false, eggFallback = null;
+function showReplay() { document.getElementById("replayBtn").classList.add("show"); }
+function initScratch() {
+  if (scratchInit) return; scratchInit = true;
+  const cv = document.getElementById("scratchPad");
+  const code = document.getElementById("eggCode");
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const w = code.offsetWidth || 200, h = code.offsetHeight || 90;
+  cv.width = w * dpr; cv.height = h * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.scale(dpr, dpr);
+  /* 涂层：深蓝箔面 + 星点 + 提示字 */
+  const g = ctx.createLinearGradient(0, 0, w, h);
+  g.addColorStop(0, "#2a3560"); g.addColorStop(1, "#141c3a");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+  for (let i = 0; i < 26; i++) {
+    ctx.fillStyle = `rgba(223,232,255,${(.15 + Math.random() * .35).toFixed(2)})`;
+    ctx.beginPath();
+    ctx.arc(Math.random() * w, Math.random() * h, Math.random() * 1.4 + .3, 0, 7);
+    ctx.fill();
+  }
+  ctx.fillStyle = "rgba(231,199,106,.9)";
+  ctx.font = "600 15px 'Noto Serif SC','Songti SC',serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("刮 开 涂 层", w / 2, h / 2);
+
+  const at = e => {
+    const r = cv.getBoundingClientRect();
+    const pt = (e.changedTouches && e.changedTouches[0]) || e;
+    return [pt.clientX - r.left, pt.clientY - r.top];
+  };
+  const check = () => {
+    const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+    let clear = 0, total = 0;
+    for (let i = 3; i < d.length; i += 64) { total++; if (!d[i]) clear++; }   // 每 16px 采样 alpha
+    if (clear / total >= .8) reveal();
+  };
+  const reveal = () => {
+    scratchDone = true;
+    cv.style.transition = "opacity .8s ease"; cv.style.opacity = 0;
+    code.classList.add("revealed");
+    const r = cv.getBoundingClientRect();
+    fxBurst(r.left + r.width / 2, r.top + r.height / 2, false);
+    showReplay();
+  };
+  let down = false, cnt = 0;
+  const scratch = e => {
+    if (scratchDone) return;
+    const [x, y] = at(e);
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.beginPath(); ctx.arc(x, y, 24, 0, 7); ctx.fill();
+    if (++cnt % 5 === 0) check();
+  };
+  cv.addEventListener("touchstart", e => { e.preventDefault(); down = true; scratch(e); }, { passive: false });
+  cv.addEventListener("touchmove", e => { e.preventDefault(); if (down) scratch(e); }, { passive: false });
+  cv.addEventListener("touchend", () => { down = false; check(); });
+  cv.addEventListener("mousedown", e => { down = true; scratch(e); });
+  cv.addEventListener("mousemove", e => { if (down) scratch(e); });
+  addEventListener("mouseup", () => { if (down) { down = false; check(); } });
 }
 
 /* ---------- 我愿意 ---------- */
