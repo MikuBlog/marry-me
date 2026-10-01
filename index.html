@@ -114,6 +114,10 @@
                        to { opacity:1; filter:none; transform:scale(1); } }
 
   #ring { width:min(64vw,260px); height:auto; display:block; margin-bottom:6px; }
+  /* 问句引信：戒指汇聚完成后先浮现「藏了 N 天」，停一拍再打问句 */
+  .propose-pre { font-size:15px; letter-spacing:.1em; color:#9fb0d0; margin:14px 0 2px;
+    opacity:0; transform:translateY(10px); transition:opacity .6s ease, transform .6s ease; }
+  .propose-pre.show { opacity:1; transform:translateY(0); }
   .propose-q { font-size:clamp(30px,9vw,42px); letter-spacing:.14em; color:#fdf3d0; margin:14px 0 34px;
     text-shadow:0 0 30px rgba(231,199,106,.35); opacity:0; transition:opacity .6s ease; }
   /* 打字机光标：问句逐字打出时跟随，打完持续闪烁等她的答案 */
@@ -281,7 +285,8 @@
     <p class="poem ln" style="--i:3; margin-bottom:8px"><span class="dim">这 <span id="daysText">N</span> 天里——</span></p>
     <p class="poem"><span class="ln em" style="--i:4">有很多小确幸，</span><br>
     <span class="ln em" style="--i:5">而其中某些瞬间，让我觉得——</span><br>
-      <span class="ln em" style="--i:6">有你在，真好～</span></p>
+    <span class="ln em" style="--i:6">有你在，真好～</span><br>
+    <span class="ln" style="--i:8">而我想把这个数字，数成<span class="em">一辈子</span>。</span></p>
     <div class="hint">轻触，回到那些瞬间 ✦</div>
   </section>
 
@@ -316,7 +321,7 @@
       <span class="ln" style="--i:2">回望过去，我们经历了无数个第一次，</span>
       <span class="ln" style="--i:3">美好的瞬间太多太多，数也数不清。</span><br>
       <span class="ln dim" style="--i:4">也会有些许的争吵，</span>
-      <span class="ln dim" style="--i:5">但那都是为了更好的未来。</span><br>
+      <span class="ln dim" style="--i:5">但谁都没想过松手。</span><br>
       <span class="ln em" style="--i:6">时空还很大，我们的故事才刚刚开始——</span><br>
       <span class="ln" style="--i:7"><span class="em" data-cfg="herName"></span>，这条心引力定律，我想用余生验证：</span>
       <span class="ln em" style="--i:8">我对你，永远做向心运动。</span>
@@ -327,9 +332,10 @@
   <!-- P7 求婚页 -->
   <section class="page" id="proposePage" data-p="6">
     <svg id="ring" viewBox="0 0 240 250" fill="none"></svg>
+    <div class="propose-pre" id="proposePre"></div>
     <div class="propose-q" id="proposeQ"></div>
     <div class="btn-row no-adv">
-      <button class="btn-yes ln" style="--i:6" id="yesBtn">我愿意 ♥</button>
+      <button class="btn-yes ln" style="--i:10" id="yesBtn">我愿意 ♥</button>
     </div>
   </section>
 
@@ -754,21 +760,27 @@ function startRing() {
   })(t0);
 }
 
-/* ---------- 求婚问句：戒指汇聚完成后逐字打出（打字机） ---------- */
+/* ---------- 求婚页：先浮现「藏了 N 天」引信，再逐字打出问句 ---------- */
 let typeTimer = null, typeTick = null;
 function typePropose() {
   clearTimeout(typeTimer); clearInterval(typeTick);
+  const pre = document.getElementById("proposePre");
   const el = document.getElementById("proposeQ");
   const text = "嫁给我，好吗？";
+  pre.textContent = `这句话，我藏了 ${daysTogether()} 天——`;
+  pre.classList.remove("show");
   el.innerHTML = ""; el.style.opacity = 0;
   typeTimer = setTimeout(() => {
-    el.style.opacity = 1;
-    let k = 0;
-    typeTick = setInterval(() => {
-      k++;
-      el.innerHTML = text.slice(0, k) + '<span class="caret"></span>';
-      if (k >= text.length) clearInterval(typeTick);   // 光标留着闪烁，等她的答案
-    }, 250);
+    pre.classList.add("show");                    // 戒指汇聚完成，引信浮现
+    typeTimer = setTimeout(() => {                // 停留 2.1s，给她读完，再打问句
+      el.style.opacity = 1;
+      let k = 0;
+      typeTick = setInterval(() => {
+        k++;
+        el.innerHTML = text.slice(0, k) + '<span class="caret"></span>';
+        if (k >= text.length) clearInterval(typeTick);   // 光标留着闪烁，等她的答案
+      }, 250);
+    }, 2100);
   }, 2100);
 }
 
