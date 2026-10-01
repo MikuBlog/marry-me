@@ -168,6 +168,8 @@
   /* 回到开头：密钥刮开后才浮现 */
   .egg-replay { opacity:0; transition:opacity .9s ease; pointer-events:none; }
   .egg-replay.show { opacity:1; pointer-events:auto; }
+  .egg-replay.arm { color:#f2d98c; border-color:rgba(242,217,140,.75);
+    box-shadow:0 0 18px rgba(242,217,140,.25); }
 
   /* 回忆照片点按冒出的爱心 */
   .heart-pop { position:fixed; z-index:3; pointer-events:none; line-height:1;
@@ -845,14 +847,26 @@ function accept() {
   }).catch(() => setTimeout(goFinale, 900));  // 音效播不出来：回退为旧行为
 }
 document.getElementById("yesBtn").addEventListener("click", e => { e.stopPropagation(); accept(); });
+let replayArmTimer = null;
 document.getElementById("replayBtn").addEventListener("click", e => {
   e.stopPropagation();
   if (!pageReady) return;                    // 文案未展示完：点按无效
   const btn = e.currentTarget;
-  if (btn.dataset.arm) { activate(0); return; }          // 第二次点：确认回到开头
-  btn.dataset.arm = "1";                                  // 第一次点：进入待确认态
-  btn.textContent = "再点一次，从头重读 ↺";
-  setTimeout(() => { if (!btn.dataset.arm) return; delete btn.dataset.arm; btn.textContent = "↺ 从头再读一遍"; }, 3000);
+  if (btn.dataset.arm) {                                   // 第二次点：确认回到开头
+    clearTimeout(replayArmTimer); delete btn.dataset.arm;
+    btn.classList.remove("arm");
+    btn.textContent = "↺ 从头再读一遍";
+    activate(0);
+    return;
+  }
+  btn.dataset.arm = "1";                                   // 第一次点：进入待确认态（6s 内再点有效）
+  btn.classList.add("arm");
+  btn.textContent = "确定？再点一次 ↺";
+  clearTimeout(replayArmTimer);
+  replayArmTimer = setTimeout(() => {
+    delete btn.dataset.arm; btn.classList.remove("arm");
+    btn.textContent = "↺ 从头再读一遍";
+  }, 6000);
 });
 
 /* ---------- 星空背景 ---------- */
