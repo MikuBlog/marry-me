@@ -848,7 +848,11 @@ document.getElementById("yesBtn").addEventListener("click", e => { e.stopPropaga
 document.getElementById("replayBtn").addEventListener("click", e => {
   e.stopPropagation();
   if (!pageReady) return;                    // 文案未展示完：点按无效
-  activate(0);
+  const btn = e.currentTarget;
+  if (btn.dataset.arm) { activate(0); return; }          // 第二次点：确认回到开头
+  btn.dataset.arm = "1";                                  // 第一次点：进入待确认态
+  btn.textContent = "再点一次，从头重读 ↺";
+  setTimeout(() => { if (!btn.dataset.arm) return; delete btn.dataset.arm; btn.textContent = "↺ 从头再读一遍"; }, 3000);
 });
 
 /* ---------- 星空背景 ---------- */
