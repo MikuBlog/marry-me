@@ -274,15 +274,15 @@
 
   <!-- P5 第三章 · 环游 · 相伴 -->
   <section class="page" id="daysPage" data-p="4">
-    <div class="tag">第三章 · 环游<span class="en">JOURNEY</span></div>
+    <div class="tag">第三章 · 相伴<span class="en">TOGETHER</span></div>
     <p class="poem ln" style="--i:0"><span class="dim">被你的引力捕获，已经是</span></p>
     <div class="days-num ln" style="--i:1" id="daysNum">0</div>
     <div class="days-unit ln" style="--i:2">天</div>
     <p class="poem ln" style="--i:3; margin-bottom:8px"><span class="dim">这 <span id="daysText">N</span> 天里——</span></p>
     <p class="poem"><span class="ln em" style="--i:4">有很多小确幸，</span><br>
     <span class="ln em" style="--i:5">而其中某些瞬间，让我觉得——</span><br>
-    <span class="ln em" style="--i:6">有你在，真好～</span></p>
-    <div class="hint">轻触，继续 ✦</div>
+      <span class="ln em" style="--i:6">有你在，真好～</span></p>
+    <div class="hint">轻触，回到那些瞬间 ✦</div>
   </section>
 
   <!-- P6 第四章 · 时空 · 承诺 -->
@@ -421,20 +421,20 @@ const CONFIG = {
   memories: [
     {
       icon: "🥂",
-      chapter: "环游 · 回忆一",
+      chapter: "相伴 · 回忆一",
       title: "你好，女朋友",
       date: "2022.09.17",
       photo: "photos/1.jpg",
       lines: [
-        "Cider 周年庆那晚，我们玩得好开心，",
-        "藏了许久的喜欢，我到第二天才说出口",
+        "Cider 周年庆那晚，我们玩得好尽兴，",
+        "藏了许久的喜欢，我到第二天才说出口，",
         "「我喜欢你，能做我女朋友吗？」",
         "你轻轻说了声：「好。」",
       ],
     },
     {
       icon: "🎂",
-      chapter: "环游 · 回忆二",
+      chapter: "相伴 · 回忆二",
       title: "两个愿望",
       date: "2022 · 冬",
       photo: "photos/2.jpg",
@@ -447,12 +447,12 @@ const CONFIG = {
     },
     {
       icon: "🐱",
-      chapter: "环游 · 回忆三",
+      chapter: "相伴 · 回忆三",
       title: "欢迎回家，gg",
       date: "2023 · 夏",
       photos: ["photos/4.jpg", "photos/5.jpg"],
       lines: [
-        "时间走到 2023，这一年，",
+        "时间走到 2023，",
         "许多事并不如我们所愿。",
         "但好在上天关上一道门，",
         "也悄悄打开一扇窗——",
@@ -462,7 +462,7 @@ const CONFIG = {
     },
     {
       icon: "🧳",
-      chapter: "环游 · 回忆四",
+      chapter: "相伴 · 回忆四",
       title: "蓝精灵的远行",
       date: "在路上",
       photos: ["photos/3.jpg", "photos/6.jpg"],
@@ -470,7 +470,7 @@ const CONFIG = {
         "再后来，我们偶尔去一趟远方，",
         "你有你的专属 OOTD，",
         "但再美的风景，都只是你的背景墙。",
-        "而最难忘的，还是蓝精灵般活力的你。",
+        "而最难忘的，是蓝精灵般活力四射的你。",
       ],
     },
   ],
@@ -959,7 +959,7 @@ initSky(); requestAnimationFrame(loop);
 
 /* ---------- 测试面板（URL 带 ?test=true 显示：数字键快速跳页） ---------- */
 if (new URLSearchParams(location.search).get("test") === "true") {
-  const names = ["封面", "序章", "引力", "轨道", "环游", "回忆一", "回忆二", "回忆三", "回忆四", "时空", "求婚", "终章", "密钥"];
+  const names = ["封面", "序章", "引力", "轨道", "相伴", "回忆一", "回忆二", "回忆三", "回忆四", "时空", "求婚", "终章", "密钥"];
   const tp = document.createElement("div");
   tp.id = "testPanel";
   tp.innerHTML = names.map((n, i) => `<button data-i="${i}" title="${n}">${i + 1}</button>`).join("");
