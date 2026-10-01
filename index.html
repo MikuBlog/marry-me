@@ -42,7 +42,7 @@
   }
   .page.active { opacity:1; pointer-events:auto; cursor:pointer; }
 
-  .tag { font-size:12px; letter-spacing:.45em; color:#c9a84c; text-indent:.45em; margin-bottom:26px; }
+  .tag { font-size:12px; letter-spacing:.45em; color:#c9a84c; text-indent:.45em; margin-bottom:32px; }
   .tag .en { display:block; margin-top:5px; font-size:9px; letter-spacing:.5em; text-indent:.5em; color:#7e90b6; opacity:.85; }
   h1.title {
     font-size:clamp(56px,20vw,88px); font-weight:600; line-height:1.1; letter-spacing:.08em;
@@ -51,7 +51,9 @@
     text-shadow:0 0 42px rgba(231,199,106,.25);
   }
   .en-sub { font-size:14px; letter-spacing:.6em; color:#9aa8c8; text-indent:.6em; margin:14px 0 34px; }
-  .poem p { font-size:17px; line-height:2.55; color:#dfe5f2; letter-spacing:.06em; }
+  .poem p { font-size:17px; line-height:2.15; color:#dfe5f2; letter-spacing:.06em; }
+  /* 块间距：相邻段落块之间、各元素之间的呼吸感 */
+  p.poem + p.poem { margin-top:20px; }
   .poem .em { color:#f2d98c; }
   .poem .dim { color:#9fb0d0; font-size:15px; }
   .sign { margin-top:26px; font-size:14px; color:#8fa0c0; letter-spacing:.2em; }
@@ -90,7 +92,7 @@
   }
   .days-unit { font-size:15px; color:#9fb0d0; letter-spacing:.4em; text-indent:.4em; margin-bottom:30px; }
   /* ---------- 回忆故事页（拍立得相纸） ---------- */
-  .polaroid { background:#f7f4ee; padding:10px 10px 12px; border-radius:4px; margin-bottom:20px;
+  .polaroid { background:#f7f4ee; padding:10px 10px 12px; border-radius:4px; margin-bottom:28px;
     box-shadow:0 14px 44px rgba(0,0,0,.55); opacity:0; transform:rotate(var(--tilt,-2deg)); }
   .polaroid.tilt-r { --tilt:2deg; }
   .page.active .polaroid { animation:prise .95s cubic-bezier(.2,.7,.3,1) calc(var(--i) * var(--step, .5s) + .15s) forwards; }
@@ -159,7 +161,7 @@
 
   #fx { position:fixed; inset:0; z-index:1; pointer-events:none; }
 
-  .svg-illu { width:min(72vw,300px); height:auto; margin:8px auto 22px; display:block; }
+  .svg-illu { width:min(72vw,300px); height:auto; margin:12px auto 30px; display:block; }
   .svg-illu.small { width:min(60vw,250px); }
 
   /* P9 开箱密钥数字 */
@@ -168,7 +170,7 @@
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
     text-shadow:0 0 46px rgba(231,199,106,.28); }
   /* 刮刮乐：canvas 涂层盖住密钥，刮开 ≥80% 全显 */
-  .egg-scratch { position:relative; display:inline-block; margin:16px 0 12px; }
+  .egg-scratch { position:relative; display:inline-block; margin:22px 0 18px; }
   .egg-scratch .egg-code { margin:0; }
   #scratchPad { position:absolute; inset:0; width:100%; height:100%; touch-action:none;
     border-radius:10px; border:1px solid rgba(231,199,106,.3); cursor:pointer; }
