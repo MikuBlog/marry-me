@@ -175,11 +175,10 @@
   .egg-code.revealed { animation:eggGlow 1.6s ease-in-out infinite; }
   @keyframes eggGlow { 0%,100%{ filter:drop-shadow(0 0 8px rgba(231,199,106,.25)); }
                        50%{ filter:drop-shadow(0 0 26px rgba(231,199,106,.7)); } }
-  /* 回到开头：密钥刮开后才浮现 */
-  .egg-replay { opacity:0; transition:opacity .9s ease; pointer-events:none; }
+  /* 回到开头：固定在右下角（避开中部点击区），密钥刮开后浮现，单击即回封面 */
+  .egg-replay { position:fixed; z-index:3; right:16px; bottom:calc(env(safe-area-inset-bottom) + 14px);
+    opacity:0; transition:opacity .9s ease; pointer-events:none; }
   .egg-replay.show { opacity:1; pointer-events:auto; }
-  .egg-replay.arm { color:#f2d98c; border-color:rgba(242,217,140,.75);
-    box-shadow:0 0 18px rgba(242,217,140,.25); }
 
   /* 回忆照片点按冒出的爱心 */
   .heart-pop { position:fixed; z-index:3; pointer-events:none; line-height:1;
@@ -384,7 +383,7 @@
       <canvas id="scratchPad"></canvas>
     </div>
     <p class="poem"><span class="ln dim" style="--i:6; font-size:13px;">（<span data-cfg="eggHint"></span>）</span></p>
-    <button class="replay no-adv egg-replay" id="replayBtn" style="margin-top:30px;">↺ 从头再读一遍</button>
+    <button class="replay no-adv egg-replay" id="replayBtn">↺ 从头再读一遍</button>
   </section>
 
 </div>
@@ -857,26 +856,10 @@ function accept() {
   }).catch(() => setTimeout(goFinale, 900));  // 音效播不出来：回退为旧行为
 }
 document.getElementById("yesBtn").addEventListener("click", e => { e.stopPropagation(); accept(); });
-let replayArmTimer = null;
 document.getElementById("replayBtn").addEventListener("click", e => {
   e.stopPropagation();
   if (!pageReady) return;                    // 文案未展示完：点按无效
-  const btn = e.currentTarget;
-  if (btn.dataset.arm) {                                   // 第二次点：确认回到开头
-    clearTimeout(replayArmTimer); delete btn.dataset.arm;
-    btn.classList.remove("arm");
-    btn.textContent = "↺ 从头再读一遍";
-    activate(0);
-    return;
-  }
-  btn.dataset.arm = "1";                                   // 第一次点：进入待确认态（6s 内再点有效）
-  btn.classList.add("arm");
-  btn.textContent = "确定？再点一次 ↺";
-  clearTimeout(replayArmTimer);
-  replayArmTimer = setTimeout(() => {
-    delete btn.dataset.arm; btn.classList.remove("arm");
-    btn.textContent = "↺ 从头再读一遍";
-  }, 6000);
+  activate(0);                               // 单击即回封面（按钮固定右下角，避开误触区）
 });
 
 /* ---------- 星空背景 ---------- */
