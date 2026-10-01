@@ -175,9 +175,8 @@
   .egg-code.revealed { animation:eggGlow 1.6s ease-in-out infinite; }
   @keyframes eggGlow { 0%,100%{ filter:drop-shadow(0 0 8px rgba(231,199,106,.25)); }
                        50%{ filter:drop-shadow(0 0 26px rgba(231,199,106,.7)); } }
-  /* 回到开头：固定在右下角（避开中部点击区），密钥刮开后浮现，单击即回封面 */
-  .egg-replay { position:fixed; z-index:3; right:16px; bottom:calc(env(safe-area-inset-bottom) + 14px);
-    opacity:0; transition:opacity .9s ease; pointer-events:none; }
+  /* 回到开头：内容流内居中、略低于正文，密钥刮开后浮现，单击即回封面 */
+  .egg-replay { opacity:0; transition:opacity .9s ease; pointer-events:none; margin-top:30px; }
   .egg-replay.show { opacity:1; pointer-events:auto; }
 
   /* 回忆照片点按冒出的爱心 */
