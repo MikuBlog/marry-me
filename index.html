@@ -113,6 +113,7 @@
   .ph-duo { display:flex; flex-direction:column; gap:6px; align-items:center; }
   .ph-duo .ph-slot { width:82%; aspect-ratio:auto; min-height:90px; }
   .ph-duo .ph-slot img { width:100%; height:auto; object-fit:contain; }
+  .ph-duo .ph-slot.vslot { width:66%; }   /* 混合方向时竖图收窄，弱化竖长感 */
   .ph-duo.ph-side { flex-direction:row; align-items:stretch; }
   .ph-duo.ph-side .ph-slot { width:auto; flex:1; min-height:0; }
   .ph-cap { font-size:15px; font-weight:600; color:#4a4038; text-align:center; margin-top:9px; letter-spacing:.06em; }
@@ -424,7 +425,7 @@ const CONFIG = {
   meetText: "你总是不经意从我身边经过",      // P3 相遇的场景，一句话
 
   // 【可改】P9 开箱彩蛋页
-  eggPassword: "918",             // 宝箱密码
+  eggPassword: "0918",            // 宝箱密码
   eggLocation: "客厅",             // 宝箱摆放位置
   eggHint: "是我们开始的那一天",     // 密码含义的小提示
 
@@ -463,7 +464,7 @@ const CONFIG = {
       chapter: "相伴 · 回忆三",
       title: "欢迎回家，gg",
       date: "2023 · 夏",
-      photos: ["photos/4.jpg", "photos/5.jpg"],
+      photos: ["photos/5.jpg", "photos/4.jpg"],
       lines: [
         "时间走到 2023，",
         "许多事并不如我们所愿。",
@@ -478,7 +479,7 @@ const CONFIG = {
       chapter: "相伴 · 回忆四",
       title: "蓝精灵的远行",
       date: "在路上",
-      photos: ["photos/3.jpg", "photos/6.jpg"],
+      photos: ["photos/6.jpg", "photos/3.jpg"],
       lines: [
         "再后来，我们偶尔去一趟远方，",
         "你有你的专属 OOTD，",
@@ -624,12 +625,14 @@ function activate(i) {
   cur = i;
   /* 照片按需加载：进到该页才赋 src（正常情况下预热缓存已先行拉好，此处秒出） */
   pages[i].querySelectorAll("img[data-src]").forEach(im => { im.src = im.dataset.src; });
-  /* 双图方向自适应：两张都是竖图时并排等高（完整显示且不超页高） */
+  /* 双图方向自适应：两张都是竖图时并排等高；混合方向时竖图收窄居中 */
   pages[i].querySelectorAll(".ph-duo").forEach(duo => {
     const imgs = [...duo.querySelectorAll("img")];
     const apply = () => {
-      if (imgs.every(im => im.complete && im.naturalWidth) &&
-          imgs.every(im => im.naturalHeight > im.naturalWidth)) duo.classList.add("ph-side");
+      if (!imgs.every(im => im.complete && im.naturalWidth)) return;
+      const portrait = imgs.map(im => im.naturalHeight > im.naturalWidth);
+      if (portrait.every(Boolean)) duo.classList.add("ph-side");
+      else imgs.forEach((im, k) => { if (portrait[k]) im.parentElement.classList.add("vslot"); });
     };
     imgs.forEach(im => im.complete ? apply() : im.addEventListener("load", apply, { once: true }));
     apply();
