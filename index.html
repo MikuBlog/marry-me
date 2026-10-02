@@ -108,9 +108,13 @@
   .ph-date { position:absolute; top:6px; right:8px; font-size:11px; letter-spacing:.08em;
     color:rgba(255,255,255,.9); text-shadow:0 1px 4px rgba(0,0,0,.55); }
   .ph-area { position:relative; width:min(70vw,264px); margin:0 auto; }
-  /* 双图回忆：两张小方照并排，共用一张拍立得 */
-  .ph-duo { display:flex; gap:6px; }
-  .ph-duo .ph-slot { flex:1; width:auto; aspect-ratio:1/1; }
+  /* 双图回忆：默认上下堆叠、按原始比例完整显示（不裁剪）；
+     两张都是竖图时自动切并排等高（layoutDuo 检测方向后加 .ph-side） */
+  .ph-duo { display:flex; flex-direction:column; gap:6px; align-items:center; }
+  .ph-duo .ph-slot { width:82%; aspect-ratio:auto; min-height:90px; }
+  .ph-duo .ph-slot img { width:100%; height:auto; object-fit:contain; }
+  .ph-duo.ph-side { flex-direction:row; align-items:stretch; }
+  .ph-duo.ph-side .ph-slot { width:auto; flex:1; min-height:0; }
   .ph-cap { font-size:15px; font-weight:600; color:#4a4038; text-align:center; margin-top:9px; letter-spacing:.06em; }
   .page.active .ph-slot img, .page.active .ph-fallback { animation:develop 1.6s ease .35s both; }
   @keyframes develop { from { opacity:0; filter:blur(10px) sepia(.5); transform:scale(1.05); }
@@ -620,6 +624,16 @@ function activate(i) {
   cur = i;
   /* 照片按需加载：进到该页才赋 src（正常情况下预热缓存已先行拉好，此处秒出） */
   pages[i].querySelectorAll("img[data-src]").forEach(im => { im.src = im.dataset.src; });
+  /* 双图方向自适应：两张都是竖图时并排等高（完整显示且不超页高） */
+  pages[i].querySelectorAll(".ph-duo").forEach(duo => {
+    const imgs = [...duo.querySelectorAll("img")];
+    const apply = () => {
+      if (imgs.every(im => im.complete && im.naturalWidth) &&
+          imgs.every(im => im.naturalHeight > im.naturalWidth)) duo.classList.add("ph-side");
+    };
+    imgs.forEach(im => im.complete ? apply() : im.addEventListener("load", apply, { once: true }));
+    apply();
+  });
   if (i === DAYS) runDaysCount();
   if (i === PROPOSE) { accepted = false; document.getElementById("yesBtn").classList.remove("accepted"); confirmSfx.pause(); confirmSfx.currentTime = 0; startRing(); typePropose(); }
   if (i === FINALE) { document.getElementById("yesDate").textContent = yesDateText(); fxStart(); }
