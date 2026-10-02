@@ -113,9 +113,12 @@
   .ph-duo { display:flex; flex-direction:column; gap:6px; align-items:center; }
   .ph-duo .ph-slot { width:82%; aspect-ratio:auto; min-height:90px; }
   .ph-duo .ph-slot img { width:100%; height:auto; object-fit:contain; }
-  .ph-duo .ph-slot.vslot { width:66%; }   /* 混合方向时竖图收窄，弱化竖长感 */
   .ph-duo.ph-side { flex-direction:row; align-items:stretch; }
   .ph-duo.ph-side .ph-slot { width:auto; flex:1; min-height:0; }
+  /* 混合方向（横+竖）：左右布局，等高、宽度按图片比例自适应（flex-grow=宽高比） */
+  .ph-duo.ph-mix { flex-direction:row; align-items:center; gap:4px; }
+  .ph-duo.ph-mix .ph-slot { width:auto; min-height:0; }
+  .ph-area.mixwide { width:min(80vw,300px); }   /* 混合页照片区加宽，图更大 */
   .ph-cap { font-size:15px; font-weight:600; color:#4a4038; text-align:center; margin-top:9px; letter-spacing:.06em; }
   .page.active .ph-slot img, .page.active .ph-fallback { animation:develop 1.6s ease .35s both; }
   @keyframes develop { from { opacity:0; filter:blur(10px) sepia(.5); transform:scale(1.05); }
@@ -632,7 +635,11 @@ function activate(i) {
       if (!imgs.every(im => im.complete && im.naturalWidth)) return;
       const portrait = imgs.map(im => im.naturalHeight > im.naturalWidth);
       if (portrait.every(Boolean)) duo.classList.add("ph-side");
-      else imgs.forEach((im, k) => { if (portrait[k]) im.parentElement.classList.add("vslot"); });
+      else {                                   // 左右等高：flex 比例 = 各自宽高比
+        duo.classList.add("ph-mix");
+        duo.parentElement.classList.add("mixwide");
+        imgs.forEach(im => { im.parentElement.style.flex = (im.naturalWidth / im.naturalHeight).toFixed(3); });
+      }
     };
     imgs.forEach(im => im.complete ? apply() : im.addEventListener("load", apply, { once: true }));
     apply();
