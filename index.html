@@ -223,7 +223,7 @@
       <span class="ln" style="--i:3">有一段信号，穿越了 138 亿年，</span>
       <span class="ln" style="--i:4">只为抵达你。</span></p>
     <div class="cover-cta no-adv ln" id="startBtn" style="--i:6">轻触，接收宇宙的信号 ✦</div>
-    <div class="cover-note ln" style="--i:7">（打开声音，效果最佳 ♪）</div>
+    <!-- ★ 音频停用：提示行注释 <div class="cover-note ln" style="--i:7">（打开声音，效果最佳 ♪）</div> ★ -->
   </section>
 
   <!-- P2 序章 · 星尘 -->
@@ -409,9 +409,10 @@
 
 <canvas id="fx"></canvas>
 <div class="disc" id="disc">♪</div>
+<!-- ★ 音频暂时停用（待用户启用后恢复）
 <audio id="bgm" src="music.m4a" loop preload="auto"></audio>
-<!-- 「我愿意」确认音效：进页面即预加载，点按后播完再进终章 -->
 <audio id="confirmSfx" src="confirm.m4a" preload="auto"></audio>
+★ -->
 
 <script>
 /* ════════════════════════════════════════════════════════════
@@ -542,6 +543,7 @@ function preloadPhotos(priority) {
     });
   });
 }
+/* ★ 音频停用：bgm 相关预热触发注释（4s 兜底仍在）
 const bgmEl = document.getElementById("bgm");
 bgmEl.addEventListener("canplaythrough", () => preloadPhotos("low"), { once: true });
 bgmEl.addEventListener("progress", () => {
@@ -550,6 +552,7 @@ bgmEl.addEventListener("progress", () => {
     preloadPhotos("high");
   }
 });
+★ */
 setTimeout(() => preloadPhotos("low"), 4000);
 
 /* 回忆照片小彩蛋：点按冒一颗爱心（点照片不翻页，点照片以外才前进） */
@@ -600,12 +603,15 @@ const DAYS = pages.findIndex(p => p.id === "daysPage");
 const PROPOSE = pages.findIndex(p => p.id === "proposePage");
 const FINALE = pages.findIndex(p => p.id === "finalePage");
 const EGG = pages.findIndex(p => p.id === "eggPage");
+/* ★ 音频停用
 const bgm = document.getElementById("bgm");
 const disc = document.getElementById("disc");
+★ */
 
 /* 微信内打开即自动播放：iOS/微信禁止网页未经点击出声（平台策略），
    唯一官方通道是 WeixinJSBridgeReady；普通浏览器会静默失败，
    回退为首次点击封面任意处起音乐 */
+/* ★ 音频停用：自动播放链注释
 function tryAutoplay() {
   bgm.play().then(() => { started = true; disc.classList.add("show"); }).catch(() => {});
 }
@@ -616,11 +622,12 @@ function wechatBridge() {
   }
   return false;
 }
-if (wechatBridge()) { /* bridge 已就绪，已触发自动播放 */ }
+if (wechatBridge()) {}
 else {
   document.addEventListener("WeixinJSBridgeReady", () => wechatBridge(), false);
-  tryAutoplay(); // 极少数宽松环境直接自动播；失败则静默等待首次点击
+  tryAutoplay();
 }
+★ */
 
 function activate(i) {
   pages.forEach((p, k) => p.classList.toggle("active", k === i));
@@ -644,7 +651,7 @@ function activate(i) {
     apply();
   });
   if (i === DAYS) runDaysCount();
-  if (i === PROPOSE) { accepted = false; document.getElementById("yesBtn").classList.remove("accepted"); confirmSfx.pause(); confirmSfx.currentTime = 0; startRing(); typePropose(); }
+  if (i === PROPOSE) { accepted = false; document.getElementById("yesBtn").classList.remove("accepted"); /* ★ confirmSfx.pause(); confirmSfx.currentTime = 0; ★ */ startRing(); typePropose(); }
   if (i === FINALE) { document.getElementById("yesDate").textContent = yesDateText(); fxStart(); }
   else fxStop();
   if (i === EGG) { initScratch(); clearTimeout(eggFallback); eggFallback = setTimeout(showReplay, 30000); }
@@ -695,23 +702,27 @@ document.getElementById("stage").addEventListener("click", e => {
 /* 封面：起音乐 + 进入（点按钮或任意位置均可；若已自动播放则仅翻页） */
 function startExperience() {
   if (!pageReady) return;                    // 文案未展示完：点按无效
+  /* ★ 音频停用：起音乐注释
   if (!started) {
     started = true;
     bgm.play().catch(() => {});
     disc.classList.add("show");
   }
+  ★ */
   goNext();
 }
 document.getElementById("startBtn").addEventListener("click", e => {
   e.stopPropagation();
   startExperience();
 });
+/* ★ 音频停用：音乐按钮注释
 function toggleMusic() {
   if (bgm.paused) { bgm.play().catch(() => {}); disc.classList.remove("paused"); }
   else { bgm.pause(); disc.classList.add("paused"); }
 }
 disc.addEventListener("click", toggleMusic);
 disc.addEventListener("touchend", e => { e.preventDefault(); toggleMusic(); }, { passive: false });
+★ */
 
 /* ---------- 第 N 天（数字滚动） ---------- */
 let daysDone = false;
@@ -873,7 +884,7 @@ function initScratch() {
 }
 
 /* ---------- 我愿意 ---------- */
-const confirmSfx = document.getElementById("confirmSfx");
+/* ★ 音频停用：const confirmSfx = document.getElementById("confirmSfx"); ★ */
 let accepted = false;
 function accept() {
   if (!pageReady || accepted) return;        // 文案未展示完/已点过：点按无效
@@ -884,19 +895,22 @@ function accept() {
   btn.classList.add("accepted");
   const r = btn.getBoundingClientRect();
   fxBurst(r.left + r.width / 2, r.top + r.height / 2, false);
+  /* ★ 音频停用：确认音效链注释，恢复即时进终章
   let moved = false;
   const goFinale = () => {
-    if (moved) return;                        // ended/兜底/回退三路只走一次
+    if (moved) return;
     moved = true;
     fxBurst(innerWidth / 2, innerHeight * .38, true);
     setTimeout(() => activate(FINALE), 800);
   };
   confirmSfx.play().then(() => {
     confirmSfx.addEventListener("ended", goFinale, { once: true });
-    /* 兜底：万一 ended 事件丢失，按（时长+3s）强制进入终章 */
     const wait = isFinite(confirmSfx.duration) ? confirmSfx.duration * 1000 + 3000 : 12000;
     setTimeout(goFinale, wait);
-  }).catch(() => setTimeout(goFinale, 900));  // 音效播不出来：回退为旧行为
+  }).catch(() => setTimeout(goFinale, 900));
+  ★ */
+  fxBurst(innerWidth / 2, innerHeight * .38, true);
+  setTimeout(() => activate(FINALE), 800);
 }
 document.getElementById("yesBtn").addEventListener("click", e => { e.stopPropagation(); accept(); });
 document.getElementById("replayBtn").addEventListener("click", e => {
